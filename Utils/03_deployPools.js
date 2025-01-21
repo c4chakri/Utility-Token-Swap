@@ -1,14 +1,14 @@
 require("dotenv").config();
-
-TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
-USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
-WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
-FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
-NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
-POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
-POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
+const { ethers } = require("hardhat");
+const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
+const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
+const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
+const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
+const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
+const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
+const NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
+const POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
+const POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
 
 const artifacts = {
   UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
@@ -16,19 +16,21 @@ const artifacts = {
 };
 
 const { Contract, BigNumber } = require("ethers");
-const bn = require("bignumber.js");
+const BN = require("bignumber.js");
 const { promisify } = require("util");
 const fs = require("fs");
-bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
+// const ethers = require("ethers");
+
+BN.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
 
 const provider = ethers.provider;
 
 function encodePriceSqrt(reserve1, reserve0) {
   return BigNumber.from(
-    new bn(reserve1.toString())
+    new BN(reserve1.toString())
       .div(reserve0.toString())
       .sqrt()
-      .multipliedBy(new bn(2).pow(96))
+      .multipliedBy(new BN(2).pow(96))
       .integerValue(3)
       .toString()
   );
@@ -49,39 +51,69 @@ const factory = new Contract(
 async function deployPool(token0, token1, fee, price) {
   const [owner] = await ethers.getSigners();
 
-  await nonfungiblePositionManager
-    .connect(owner)
-    .createAndInitializePoolIfNecessary(token0, token1, fee, price, {
-      gasLimit: 5000000,
-    });
-  const poolAddress = await factory.connect(owner).getPool(token0, token1, fee);
-  return poolAddress;
+  // Ensure token0 < token1
+  if (token0 > token1) {
+    [token0, token1] = [token1, token0];
+  }
+
+  console.log("Deploying pool with parameters:");
+  console.log("Token0:", token0);
+  console.log("Token1:", token1);
+  console.log("Fee:", fee);
+  console.log("Price:", price.toString());
+
+  // Check if pool already exists
+  const poolAddress = await factory.getPool(token0, token1, fee);
+  if (poolAddress !== ethers.constants.AddressZero) {
+    console.error("Pool already exists at:", poolAddress);
+    return poolAddress;
+  }
+
+  try {
+    const tx = await nonfungiblePositionManager
+      .connect(owner)
+      .createAndInitializePoolIfNecessary(token0, token1, fee, price, {
+        gasLimit: 8000000, // Increased gas limit
+      });
+    await tx.wait();
+
+    const newPoolAddress = await factory.getPool(token0, token1, fee);
+    console.log("Pool deployed at:", newPoolAddress);
+    return newPoolAddress;
+  } catch (error) {
+    console.error("Error deploying pool:", error.message || error);
+    throw error;
+  }
 }
 
 async function main() {
-  const usdtUsdc500 = await deployPool(
-    TETHER_ADDRESS,
-    USDC_ADDRESS,
-    500,
-    encodePriceSqrt(1, 1)
-  );
+  try {
+    const usdtUsdc500 = await deployPool(
+      TETHER_ADDRESS,
+      USDC_ADDRESS,
+      500, // Pool fee tier
+      encodePriceSqrt(1, 1) // Initial price
+    );
 
-  let addresses = [`USDT_USDC_500=${usdtUsdc500}`];
-  const data = "\n" + addresses.join("\n");
-  const writeFile = promisify(fs.appendFile);
-  const filePath = ".env";
-  return writeFile(filePath, data)
-    .then(() => {
-      console.log("Addresses recorded.");
-    })
-    .catch((error) => {
-      console.error("Error logging addresses:", error);
-      throw error;
-    });
+    const addresses = [`NEXT_PUBLIC_USDT_USDC_500=${usdtUsdc500}`];
+    const data = "\n" + addresses.join("\n");
+    const writeFile = promisify(fs.appendFile);
+    const filePath = ".env";
+
+    await writeFile(filePath, data);
+    console.log("Addresses recorded.");
+  } catch (error) {
+    console.error("Error in main function:", error.message || error);
+    throw error;
+  }
 }
-//
+
+
+
+
 /*
-  npx hardhat run --network localhost scripts/03_deployPools.js
+  Run the script using:
+  npx hardhat run --network localhost Utils/03_deployPools.js
 */
 
 main()
