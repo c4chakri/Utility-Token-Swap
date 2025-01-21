@@ -1,13 +1,13 @@
 require("dotenv").config();
 const { ethers } = require("hardhat");
-const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
-const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
-const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
+// const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
+// const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
+
+
+const NEXT_PUBLIC_UT1 = process.env.NEXT_PUBLIC_UT1;
+const NEXT_PUBLIC_UT2 = process.env.NEXT_PUBLIC_UT2;
+
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
-const NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
-const POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
 const POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
 
 const artifacts = {
@@ -88,20 +88,30 @@ async function deployPool(token0, token1, fee, price) {
 
 async function main() {
   try {
-    const usdtUsdc500 = await deployPool(
-      TETHER_ADDRESS,
-      USDC_ADDRESS,
+    // const usdtUsdc500 = await deployPool(
+    //   TETHER_ADDRESS,
+    //   USDC_ADDRESS,
+    //   500, // Pool fee tier
+    //   encodePriceSqrt(1, 1) // Initial price
+    // );
+
+    const UT_POOL = await deployPool(
+      NEXT_PUBLIC_UT1,
+      NEXT_PUBLIC_UT2,
       500, // Pool fee tier
       encodePriceSqrt(1, 1) // Initial price
     );
 
-    const addresses = [`NEXT_PUBLIC_USDT_USDC_500=${usdtUsdc500}`];
+    const addresses = [
+      `NEXT_PUBLIC_UT_POOL=${UT_POOL}`
+    ];
+
     const data = "\n" + addresses.join("\n");
     const writeFile = promisify(fs.appendFile);
     const filePath = ".env";
 
     await writeFile(filePath, data);
-    console.log("Addresses recorded.");
+    console.log("Addresses recorded.",addresses);
   } catch (error) {
     console.error("Error in main function:", error.message || error);
     throw error;
@@ -121,4 +131,5 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
+    
   });

@@ -41,11 +41,12 @@ async function main() {
       [24, 35]
     ]
   ];
-  // const UT1 = await ethers.getContractFactory("SwapUT1");
-  // const ut1 = await UT1.deploy(...UT1Params);
 
-  // const UT2 = await ethers.getContractFactory("SwapUT2");
-  // const ut2 = await UT2.deploy(...UT2Params);
+  const UT1 = await ethers.getContractFactory("SwapUT1");
+  const ut1 = await UT1.deploy(...UT1Params);
+
+  const UT2 = await ethers.getContractFactory("SwapUT2");
+  const ut2 = await UT2.deploy(...UT2Params);
 
 
  const Tether = await ethers.getContractFactory("Tether");
@@ -61,9 +62,13 @@ async function main() {
   await usdc.connect(owner).mint(signer2.address,ethers.utils.parseEther("100000"));
   await wrappedBitcoin.connect(owner).mint(signer2.address,ethers.utils.parseEther("100000"));
 
+
+await ut1.connect(owner).transferUnrestrictedTokens(signer2.address,ethers.utils.parseEther("100000"));
+await ut2.connect(owner).transferUnrestrictedTokens(signer2.address,ethers.utils.parseEther("100000"));
+
   let addresses = [
-    // `NEXT_PUBLIC_UT1=${ut1.address}`,
-    // `NEXT_PUBLIC_UT2=${ut2.address}`,
+    `NEXT_PUBLIC_UT1=${ut1.address}`,
+    `NEXT_PUBLIC_UT2=${ut2.address}`,
 
     `NEXT_PUBLIC_TETHER_ADDRESS=${tether.address}`,
     `NEXT_PUBLIC_USDC_ADDRESS=${usdc.address}`,

@@ -114,7 +114,7 @@ async function main() {
     weth.address,
     nonfungibleTokenPositionDescriptor.address
   );
-  console.log("---56");
+  console.log("---5,6");
 
   let addresses = [
     `NEXT_PUBLIC_WETH_ADDRESS=${weth.address}`,
