@@ -114,7 +114,7 @@ async function main() {
     weth.address,
     nonfungibleTokenPositionDescriptor.address
   );
-  console.log("---56");
+  console.log("---5,6");
 
   let addresses = [
     `NEXT_PUBLIC_WETH_ADDRESS=${weth.address}`,
@@ -131,6 +131,15 @@ async function main() {
   return writeFile(filePath, data)
     .then(() => {
       console.log("Addresses recorded.");
+      console.table({
+        WETH_ADDRESS: weth.address,
+        FACTORY_ADDRESS: factory.address,
+        SWAP_ROUTER_ADDRESS: swapRouter.address,
+        NFT_DESCRIPTOR_ADDRESS: nftDescriptor.address,
+        POSITION_DESCRIPTOR_ADDRESS: nonfungibleTokenPositionDescriptor.address,
+        POSITION_MANAGER_ADDRESS: nonfungiblePositionManager.address,
+        
+      })
     })
     .catch((error) => {
       console.error("Error logging addresses:", error);

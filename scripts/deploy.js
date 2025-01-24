@@ -2,14 +2,17 @@
 const hre = require("hardhat");
 const fs = require("fs");
 const { promisify } = require("util");
+require("dotenv").config();
 
+const swapRouter = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
 async function main() {
   const [owner] = await ethers.getSigners();
 
   // Deploy contracts
   const SingleSwapToken = await hre.ethers.getContractFactory("SingleSwapToken");
-  const singleSwapToken = await SingleSwapToken.deploy();
+  const singleSwapToken = await SingleSwapToken.deploy(swapRouter);
   await singleSwapToken.deployed();
+
   console.log(`SingleSwapToken deployed to ${singleSwapToken.address}`);
 
   const SwapMultiHop = await hre.ethers.getContractFactory("SwapMultiHop");
@@ -28,6 +31,13 @@ async function main() {
     `NEXT_PUBLIC_SWAP_MULTI_HOP=${swapMultiHop.address}`,
     `NEXT_PUBLIC_USER_STORAGE_DATA=${userStorageData.address}`
   ];
+
+
+
+  // Deploy Pools
+
+  // USDT/USDC pair
+  
 
   // Read existing .env file
   const readFile = promisify(fs.readFile);
@@ -49,6 +59,11 @@ async function main() {
       // If .env doesn't exist, create new file
       await writeFile(filePath, newAddresses.join('\n'));
       console.log("Created new .env file with contract addresses");
+      console.table({
+        "SingleSwapToken": singleSwapToken.address,
+        "SwapMultiHop": swapMultiHop.address,
+        "UserStorageData": userStorageData.address
+      })
     } else {
       console.error("Error updating addresses:", error);
       throw error;
@@ -62,3 +77,10 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+
+  /**
+  
+  npx hardhat run --network localhost scripts/deploy.js
+  
+  */

@@ -31,10 +31,10 @@ export const getPrice = async (inputAmount, poolAddress) => {
 
   //   console.log(poolContract);
 
-  const tokenAddrss0 = await poolContract.token0();
+  const tokenAddrss0 = await poolContract.token0()
   const tokenAddrss1 = await poolContract.token1();
 
-  console.log(tokenAddrss0, tokenAddrss1);
+  // console.log(tokenAddrss0, tokenAddrss1);
 
   const tokenAbi0 = await getAbi(tokenAddrss0);
   const tokenAbi1 = await getAbi(tokenAddrss1);

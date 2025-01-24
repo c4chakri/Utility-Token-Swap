@@ -1,39 +1,33 @@
-// Token addresses
-schoolOfArchPlanningAddress = "0x9A8Ec3B44ee760b629e204900c86d67414a67e8f";
-schoolOfLawAddrss = "0xA899118f4BCCb62F8c6A37887a4F450D8a4E92E0";
-schoolOLibArtsHumanitiesAddress = "0xb60971942E4528A811D24826768Bc91ad1383D21";
-schoolOfScienceAddrss = "0xF94AB55a20B32AC37c3A105f12dB535986697945";
-schoolOfArtsDesignAddress = "0xD185B4846E5fd5419fD4D077dc636084BEfC51C0";
-schoolOfBusinessAddress = "0xBCF063A9eB18bc3C6eB005791C61801B7cB16fe4";
-schoolOfTechAddress = "0xF62eEc897fa5ef36a957702AA4a45B58fE8Fe312";
-shoaibAddress = "0x1D87585dF4D48E52436e26521a3C5856E4553e3F";
-rayyanAddrss = "0x810090f35DFA6B18b5EB59d298e2A2443a2811E2";
-popUpAddress = "0x2B8F5e69C35c1Aff4CCc71458CA26c2F313c3ed3";
+require("dotenv").config();
+const { Contract, BigNumber } = require("ethers");
+const ethers = require("ethers");
+const bn = require("bignumber.js");
+const fs = require("fs/promises");
 
-// Uniswap contract address
-wethAddress = "0xDe1112a0960B9619da7F91D51fB571cdefE48B5E";
-factoryAddress = "0x1D87585dF4D48E52436e26521a3C5856E4553e3F";
-swapRouterAddress = "0x810090f35DFA6B18b5EB59d298e2A2443a2811E2";
-nftDescriptorAddress = "0x2B8F5e69C35c1Aff4CCc71458CA26c2F313c3ed3";
-positionDescriptorAddress = "0x9A8Ec3B44ee760b629e204900c86d67414a67e8f";
-positionManagerAddress = "0xA899118f4BCCb62F8c6A37887a4F450D8a4E92E0";
+bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
+
+const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
+const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
+const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
+const SOS_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS;
+const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
+
+const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
+const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
+const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
+const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
+const NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
+const POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
+const POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
 
 const artifacts = {
   UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
   NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
 };
 
-// const { waffle } = require("hardhat");
-const { Contract, BigNumber } = require("ethers");
-const bn = require("bignumber.js");
-const Web3Modal = require("web3modal");
-bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
-
-// const MAINNET_URL = "https://rpc.ankr.com/eth";
-const MAINNET_URL =
-  "https://mainnet.infura.io/v3/ef01014d6bf84e7c93586cd070d990af";
-
-const provider = new ethers.providers.JsonRpcProvider(MAINNET_URL);
+const hardhatURL = "http://localhost:8545";
+const provider = new ethers.providers.JsonRpcProvider(hardhatURL);
+const signer = provider.getSigner();
 
 function encodePriceSqrt(reserve1, reserve0) {
   return BigNumber.from(
@@ -47,53 +41,124 @@ function encodePriceSqrt(reserve1, reserve0) {
 }
 
 const nonfungiblePositionManager = new Contract(
-  positionManagerAddress,
+  POSITION_MANAGER_ADDRESS,
   artifacts.NonfungiblePositionManager.abi,
   provider
 );
 
 const factory = new Contract(
-  factoryAddress,
+  FACTORY_ADDRESS,
   artifacts.UniswapV3Factory.abi,
   provider
 );
 
 async function deployPool(token0, token1, fee, price) {
-  // const [owner] = await ethers.getSigners();
-  const MAINNET_URL = "test network url";
+  if (token0 > token1) {
+    [token0, token1] = [token1, token0];
+  }
 
-  const WALLET_ADDRESS = "your";
-  const WALLET_SECRET = "your";
-  const provider = new ethers.providers.JsonRpcProvider(MAINNET_URL);
-  const wallet = new ethers.Wallet(WALLET_SECRET);
-  const signer = wallet.connect(provider);
-  const create = await nonfungiblePositionManager
-    .connect(signer)
-    .createAndInitializePoolIfNecessary(token0, token1, fee, price, {
-      gasLimit: 5000000,
-    });
+  const poolAddress = await factory.getPool(token0, token1, fee);
+  if (poolAddress && poolAddress !== ethers.constants.AddressZero) {
+    console.log("Pool already exists at:", poolAddress);
+    return poolAddress; // Don't proceed with creation
+  }
+  if (poolAddress !== ethers.constants.AddressZero) {
+    console.log("Pool already exists at:", poolAddress);
+    return poolAddress;
+  }
 
-  console.log(create);
-  const poolAddress = await factory
-    .connect(signer)
-    .getPool(token0, token1, fee);
-  return poolAddress;
+  try {
+    const tx = await nonfungiblePositionManager
+      .connect(signer)
+      .createAndInitializePoolIfNecessary(token0, token1, fee, price, {
+        gasLimit: 8000000,
+      });
+    await tx.wait();
+
+    const newPoolAddress = await factory.getPool(token0, token1, fee);
+    console.log(
+      "Pool deployed for token0:",
+      token0,
+      "and token1:",
+      token1,
+      "at:",
+      newPoolAddress
+    );
+    return newPoolAddress;
+  } catch (error) {
+    console.error("Error deploying pool:", error.message || error);
+    throw error;
+  }
 }
 
 async function main() {
-  const shoRay = await deployPool(
-    popUpAddress,
-    rayyanAddrss,
-    3000,
-    encodePriceSqrt(1, 1)
-  );
+  try {
+    // Deploy USDT/USDC pair
+    const usdtUsdc = await deployPool(
+      TETHER_ADDRESS,
+      USDC_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1) // Customize the ratio if necessary
+    );
 
-  console.log("SHO_RAY=", `'${shoRay}'`);
+    // Deploy USDT/UTILITY1 pair
+    const usdtUtility1 = await deployPool(
+      TETHER_ADDRESS,
+      UTILITY1_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1) // Customize the ratio if necessary
+    );
+
+    // usdt/wbtc pair
+    const usdtWbtc = await deployPool(
+      TETHER_ADDRESS,
+      WRAPPED_BITCOIN_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1)
+    )
+
+    // Deploy USDT/SOL pair
+    const usdtSol = await deployPool(
+      TETHER_ADDRESS,
+      SOL_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1)
+    );
+
+    // Deploy USDC/SOS pair
+    const usdcSos = await deployPool(
+      USDC_ADDRESS,
+      SOS_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1)
+    );
+
+    // Deploy SOL/SOS pair
+    const solSos = await deployPool(
+      SOL_ADDRESS,
+      SOS_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1)
+    );
+
+    // Record addresses to the .env file
+    const addresses = [
+      `NEXT_PUBLIC_USDT_USDC=${usdtUsdc}`,
+      `NEXT_PUBLIC_USDT_SOL=${usdtSol}`,
+      `NEXT_PUBLIC_USDC_SOS=${usdcSos}`,
+      `NEXT_PUBLIC_SOL_SOS=${solSos}`,
+      `NEXT_PUBLIC_USDT_UTILITY1=${usdtUtility1}`,
+      `NEXT_PUBLIC_USDT_WBTC=${usdtWbtc}`
+    ];
+
+    await fs.appendFile(".env", `\n${addresses.join("\n")}\n`);
+    console.log("Pool addresses successfully recorded.");
+  } catch (error) {
+    console.error("Error in main function:", error.reason || error.message || error);
+    throw error;
+  }
 }
 
-/*
-  npx hardhat run --network goerli scripts/deployPool.js
-  */
 
 main()
   .then(() => process.exit(0))
@@ -101,3 +166,7 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+  /*
+  npx hardhat run --network localhost scripts/deployPool.js
+  */

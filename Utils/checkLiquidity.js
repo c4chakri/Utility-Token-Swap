@@ -122,58 +122,49 @@
 
 //   return poolData;
 // };
+
+
+/****************************************** UPDATED SCRIPT ******************************************* */
+
+// require("dotenv").config();
+// USDT_USDC_500 = process.env.NEXT_PUBLIC_USDT_USDC_500;
+
+// const UniswapV3Pool = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
+// const { Contract } = require("ethers");
+// const { Pool } = require("@uniswap/v3-sdk");
+// const { Provider } = require("web3modal");
+// const { ethers } = require("hardhat");
+
+// async function getPoolData(poolContract) {
+//   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
+//     poolContract.tickSpacing(), 
+//     poolContract.fee(),
+//     poolContract.liquidity(),
+//     poolContract.slot0(),
+//   ])
+
+//   return {
+//     tickSpacing,
+//     fee,
+//     liquidity: liquidity.toString(),
+//     sqrtPriceX96: slot0[0],
+//     tick: slot0[1],
+//   }
+// }
+
+// async function main() {
+
+//   const provider = ethers.provider;
+//   const poolContract = new Contract(USDT_USDC_500, UniswapV3Pool.abi, provider);
+//   const poolData = await getPoolData(poolContract);
+//   console.log(poolData);
+// }
+
+// main().then(() => process.exit(0)).catch(error => {
+//   console.error(error);
+//   process.exit(1);
+// });
+
 // /*
 // npx hardhat run --network localhost Utils/checkLiquidity.js
 // */
-
-
-
-
-
-
-
-
-
-/*************************************** UPDATED **************************************/
-require("dotenv").config();
-USDT_USDC_500 = process.env.NEXT_PUBLIC_USDT_USDC_500;
-
-const UniswapV3Pool = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
-const { Contract } = require("ethers");
-const { Pool } = require("@uniswap/v3-sdk");
-const { Provider } = require("web3modal");
-const { ethers } = require("hardhat");
-
-async function getPoolData(poolContract) {
-  const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
-    poolContract.tickSpacing(), 
-    poolContract.fee(),
-    poolContract.liquidity(),
-    poolContract.slot0(),
-  ])
-
-  return {
-    tickSpacing,
-    fee,
-    liquidity: liquidity.toString(),
-    sqrtPriceX96: slot0[0],
-    tick: slot0[1],
-  }
-}
-
-async function main() {
-
-  const provider = ethers.provider;
-  const poolContract = new Contract(USDT_USDC_500, UniswapV3Pool.abi, provider);
-  const poolData = await getPoolData(poolContract);
-  console.log(poolData);
-}
-
-main().then(() => process.exit(0)).catch(error => {
-  console.error(error);
-  process.exit(1);
-});
-
-/*
-npx hardhat run --network localhost Utils/checkLiquidity.js
-*/
