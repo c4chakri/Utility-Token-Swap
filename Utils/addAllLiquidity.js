@@ -16,14 +16,16 @@ const USDT_UTILITY1 = process.env.NEXT_PUBLIC_USDT_UTILITY1;
 const USDC_SOS = process.env.NEXT_PUBLIC_USDC_SOS;
 const SOL_SOS = process.env.NEXT_PUBLIC_SOL_SOS;
 const USDT_WBTC = process.env.NEXT_PUBLIC_USDT_WBTC;
-// Token addresses and decimals
+const UTILITY1_UTILITY2 = process.env.NEXT_PUBLIC_UTILITY1_UTILITY2;
+
+// Token addresses 
 const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
 const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
 const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
 const SOS_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS;
 const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
 const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
-
+const UTILITY2_ADDRESS = process.env.NEXT_PUBLIC_UTILITY2_ADDRESS;
 // Import necessary contract ABIs
 const artifacts = {
   UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
@@ -60,6 +62,7 @@ async function approveTokens(signer) {
   const sosContract = new Contract(SOS_ADDRESS, artifacts.ERC20.abi, signer);
   const utilityContract = new Contract(UTILITY1_ADDRESS, artifacts.utility.abi, signer);
   const wbtcContract = new Contract(WRAPPED_BITCOIN_ADDRESS, artifacts.ERC20.abi, signer);
+  const utility2Contract = new Contract(UTILITY2_ADDRESS, artifacts.utility.abi, signer);
 
   await usdtContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await usdcContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
@@ -67,7 +70,8 @@ async function approveTokens(signer) {
   await sosContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utilityContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await wbtcContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-
+  await utility2Contract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+  
   await usdtContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await solContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await usdcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
@@ -75,6 +79,7 @@ async function approveTokens(signer) {
   await sosContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 await wbtcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 
   const provider = ethers.provider;
   const factory = new Contract(
@@ -180,7 +185,7 @@ async function main() {
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", signer, provider);
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", owner, provider);
   await addLiquidity(USDT_WBTC, TETHER_ADDRESS, WRAPPED_BITCOIN_ADDRESS, "USDT", "WBTC", owner, provider);
-
+  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
   //   await addLiquidity(USDC_SOS, USDC_ADDRESS, SOS_ADDRESS, "USDC", "SOS", owner, provider);
   //   await addLiquidity(SOL_SOS, SOL_ADDRESS, SOS_ADDRESS, "SOL", "SOS", owner, provider);
 }

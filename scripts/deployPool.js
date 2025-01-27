@@ -11,7 +11,7 @@ const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
 const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
 const SOS_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS;
 const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
-
+const UTILITY2_ADDRESS = process.env.NEXT_PUBLIC_UTILITY2_ADDRESS;
 const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
 const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
@@ -76,14 +76,7 @@ async function deployPool(token0, token1, fee, price) {
     await tx.wait();
 
     const newPoolAddress = await factory.getPool(token0, token1, fee);
-    console.log(
-      "Pool deployed for token0:",
-      token0,
-      "and token1:",
-      token1,
-      "at:",
-      newPoolAddress
-    );
+
     return newPoolAddress;
   } catch (error) {
     console.error("Error deploying pool:", error.message || error);
@@ -109,6 +102,12 @@ async function main() {
       encodePriceSqrt(1, 1) // Customize the ratio if necessary
     );
 
+    const utility1Utility2 = await deployPool(
+      UTILITY1_ADDRESS,
+      UTILITY2_ADDRESS,
+      500,
+      encodePriceSqrt(1, 1)
+    );
     // usdt/wbtc pair
     const usdtWbtc = await deployPool(
       TETHER_ADDRESS,
@@ -148,11 +147,21 @@ async function main() {
       `NEXT_PUBLIC_USDC_SOS=${usdcSos}`,
       `NEXT_PUBLIC_SOL_SOS=${solSos}`,
       `NEXT_PUBLIC_USDT_UTILITY1=${usdtUtility1}`,
-      `NEXT_PUBLIC_USDT_WBTC=${usdtWbtc}`
+      `NEXT_PUBLIC_USDT_WBTC=${usdtWbtc}`,
+      `NEXT_PUBLIC_UTILITY1_UTILITY2=${utility1Utility2}`
     ];
 
     await fs.appendFile(".env", `\n${addresses.join("\n")}\n`);
     console.log("Pool addresses successfully recorded.");
+    console.table({
+      USDT_USDC: usdtUsdc,
+      USDT_SOL: usdtSol,
+      USDC_SOS: usdcSos,
+      SOL_SOS: solSos,
+      USDT_UTILITY1: usdtUtility1,
+      USDT_WBTC: usdtWbtc,
+      UTILITY1_UTILITY2: utility1Utility2
+    })
   } catch (error) {
     console.error("Error in main function:", error.reason || error.message || error);
     throw error;
@@ -167,6 +176,6 @@ main()
     process.exit(1);
   });
 
-  /*
-  npx hardhat run --network localhost scripts/deployPool.js
-  */
+/*
+npx hardhat run --network localhost scripts/deployPool.js
+*/

@@ -6,10 +6,14 @@ require("dotenv").config();
 const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
 const USDT_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
 const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-const POOL_ADDRESS = process.env.NEXT_PUBLIC_USDT_UTILITY1; // USDT/USDC Pool (500)
+const POOL_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_UTILITY2; // USDT/USDC Pool (500)
+
+
 const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
 const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
+
 const USDT_UTILITY1 = process.env.NEXT_PUBLIC_USDT_UTILITY1;
+const UTILITY2_ADDRESS = process.env.NEXT_PUBLIC_UTILITY2_ADDRESS;
 
 const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
 const USDT_WBTC = process.env.NEXT_PUBLIC_USDT_WBTC;
@@ -121,8 +125,8 @@ async function swapExactInputSingle(tokenIn, tokenOut, amountIn) {
   }
 }
 
-const tokenIn = USDT_ADDRESS;
-const tokenOut = UTILITY1_ADDRESS;
+const tokenIn = UTILITY1_ADDRESS;
+const tokenOut = UTILITY2_ADDRESS;
 const amountIn = ethers.utils.parseUnits("100",1); // 100 USDC (assuming 6 decimals for USDC)
 
 // Run the function
