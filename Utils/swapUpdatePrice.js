@@ -79,6 +79,6 @@ export const swapUpdatePrice = async (
   const ratio = (inputAmount / quoteAmountOut).toFixed(3);
 
   console.log(quoteAmountOut, ratio);
-  return [transaction, quoteAmountOut, ratio];
+  return [transaction?transaction:0, quoteAmountOut, ratio];
 });
 };
