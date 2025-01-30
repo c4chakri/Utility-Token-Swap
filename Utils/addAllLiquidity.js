@@ -184,7 +184,6 @@ async function main() {
   await addLiquidity(USDT_SOL, TETHER_ADDRESS, SOL_ADDRESS, "USDT", "SOL", owner, provider);
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", signer, provider);
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", owner, provider);
-  await addLiquidity(USDT_WBTC, TETHER_ADDRESS, WRAPPED_BITCOIN_ADDRESS, "USDT", "WBTC", owner, provider);
   await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
   //   await addLiquidity(USDC_SOS, USDC_ADDRESS, SOS_ADDRESS, "USDC", "SOS", owner, provider);
   //   await addLiquidity(SOL_SOS, SOL_ADDRESS, SOS_ADDRESS, "SOL", "SOS", owner, provider);

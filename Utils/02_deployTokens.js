@@ -54,7 +54,6 @@ async function main() {
   await utility2.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
 
   // utility1 balance of signer2
-
   ut1Signer2Balance = await (utility1.balanceOf(signer2.address));
 
 
