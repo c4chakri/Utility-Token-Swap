@@ -71,15 +71,15 @@ async function approveTokens(signer) {
   await utilityContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await wbtcContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utility2Contract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-  
+
   await usdtContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await solContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await usdcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await sosContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await sosContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-await wbtcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+  await wbtcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+  await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 
   const provider = ethers.provider;
   const factory = new Contract(
@@ -125,7 +125,7 @@ async function addLiquidity(poolAddress, token0Address, token1Address, token0Sym
     tickUpper = Math.ceil(tickUpper / tickSpacing) * tickSpacing;
     const position = new Position({
       pool,
-      liquidity: JSBI.BigInt(ethers.utils.parseUnits("1", 18).toString()),
+      liquidity: JSBI.BigInt(ethers.utils.parseUnits("1000", 18).toString()),
       tickLower,
       tickUpper,
     });

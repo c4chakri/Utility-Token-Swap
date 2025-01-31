@@ -62,7 +62,29 @@ async function swapExactInputSingle(tokenIn, tokenOut, amountIn) {
     artifacts.ERC20.abi,
     deployer
   );
+
+  const allowance = await tokenInContract.allowance(deployer.address, SWAP_ROUTER_ADDRESS);
+  console.log("Allowance:", ethers.utils.formatUnits(allowance, 6));
+
+  if (allowance.lt(amountIn)) {
+    console.error("Insufficient allowance! Approving now...");
+    const approveTx = await tokenInContract.approve(SWAP_ROUTER_ADDRESS, amountIn);
+    await approveTx.wait();
+  }
   const pool = new Contract(POOL_ADDRESS, artifacts.Pool.abi, deployer);
+  const token0 = await pool.token0();
+  const token1 = await pool.token1();
+  console.log(`Pool tokens: ${token0} - ${token1}`);
+
+  const liquidity = await pool.liquidity();
+  console.log("Pool Liquidity:", liquidity.toString());
+
+  const tokenBalance = await tokenInContract.balanceOf(deployer.address);
+  console.log("Token In Balance:", ethers.utils.formatUnits(tokenBalance, 6));
+
+  if (tokenBalance.lt(amountIn)) {
+    console.error("Insufficient token balance to swap!");
+  }
 
   // Fetch the balances before the swap
   const tokenInUserBalBefore = await tokenInContract.balanceOf(recipient);
@@ -80,7 +102,7 @@ async function swapExactInputSingle(tokenIn, tokenOut, amountIn) {
   const params = {
     tokenIn: tokenIn, // Dynamic token address
     tokenOut: tokenOut, // Dynamic token address
-    fee: 500, // Pool fee, adjust as needed
+    fee: 10000, // Pool fee, adjust as needed
     recipient,
     deadline: Math.floor(Date.now() / 1000) + 60 * 10, // 10 minute deadline
     amountIn,
@@ -111,12 +133,23 @@ async function swapExactInputSingle(tokenIn, tokenOut, amountIn) {
     console.log(
       `${tokenOut} Received by user from swap:`,
       tokenOutUserDiff.toString(),
-      ethers.utils.formatUnits(tokenOutUserDiff, 6)
+      ethers.utils.formatUnits(tokenOutUserDiff, 18)
     );
     console.log(
       `${tokenIn} Received by pool from swap:`,
       tokenOutUserDiff.toString(),
-      ethers.utils.formatUnits(tokenInPoolDiff, 6)
+      ethers.utils.formatUnits(tokenInPoolDiff, 18)
+    );
+
+    console.log(
+      `${tokenIn} Spent by user in swap:`,
+      tokenInUserDiff.toString(),
+      ethers.utils.formatUnits(tokenInUserDiff, 18)
+    );
+    console.log(
+      `${tokenOut} Spent by pool in swap:`,
+      tokenOutPoolDiff.toString(),
+      ethers.utils.formatUnits(tokenOutPoolDiff, 18)
     );
 
     await logPoolLiquidity(pool);
@@ -127,7 +160,7 @@ async function swapExactInputSingle(tokenIn, tokenOut, amountIn) {
 
 const tokenIn = UTILITY1_ADDRESS;
 const tokenOut = UTILITY2_ADDRESS;
-const amountIn = ethers.utils.parseUnits("100",1); // 100 USDC (assuming 6 decimals for USDC)
+const amountIn = ethers.utils.parseUnits("1", 18); // 100 USDC (assuming 6 decimals for USDC)
 
 // Run the function
 swapExactInputSingle(tokenIn, tokenOut, amountIn)

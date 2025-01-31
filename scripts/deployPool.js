@@ -86,60 +86,62 @@ async function deployPool(token0, token1, fee, price) {
 
 async function main() {
   try {
-    // Deploy USDT/USDC pair
+    // Deploy USDT/USDC pair with 0.05% fee and 1:1 price ratio
     const usdtUsdc = await deployPool(
       TETHER_ADDRESS,
       USDC_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1) // Customize the ratio if necessary
+      500,  // 0.05% fee
+      encodePriceSqrt(1, 1)
     );
-
-    // Deploy USDT/UTILITY1 pair
+  
+    // Deploy USDT/UTILITY1 pair with 0.3% fee and 2:1 price ratio
     const usdtUtility1 = await deployPool(
       TETHER_ADDRESS,
       UTILITY1_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1) // Customize the ratio if necessary
+      3000, // 0.3% fee
+      encodePriceSqrt(2, 1) // USDT is worth 2x of UTILITY1
     );
-
+  
+    // Deploy UTILITY1/UTILITY2 pair with 1% fee and 1:3 price ratio
     const utility1Utility2 = await deployPool(
       UTILITY1_ADDRESS,
       UTILITY2_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
+      10000, // 1% fee
+      encodePriceSqrt(1, 3) // UTILITY1 is worth 1/3 of UTILITY2
     );
-    // usdt/wbtc pair
+  
+    // Deploy USDT/WBTC pair with 0.3% fee and 1:50 price ratio
     const usdtWbtc = await deployPool(
       TETHER_ADDRESS,
       WRAPPED_BITCOIN_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    )
-
-    // Deploy USDT/SOL pair
+      3000,
+      encodePriceSqrt(1, 50) // 1 WBTC = 50 USDT
+    );
+  
+    // Deploy USDT/SOL pair with 0.05% fee and 1:120 price ratio
     const usdtSol = await deployPool(
       TETHER_ADDRESS,
       SOL_ADDRESS,
       500,
-      encodePriceSqrt(1, 1)
+      encodePriceSqrt(1, 120) // 1 SOL = 120 USDT
     );
-
-    // Deploy USDC/SOS pair
+  
+    // Deploy USDC/SOS pair with 0.3% fee and 1:10000 price ratio
     const usdcSos = await deployPool(
       USDC_ADDRESS,
       SOS_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
+      3000,
+      encodePriceSqrt(1, 10000) // 1 USDC = 10,000 SOS
     );
-
-    // Deploy SOL/SOS pair
+  
+    // Deploy SOL/SOS pair with 1% fee and 1:5000 price ratio
     const solSos = await deployPool(
       SOL_ADDRESS,
       SOS_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
+      10000,
+      encodePriceSqrt(1, 5000) // 1 SOL = 5,000 SOS
     );
-
+  
     // Record addresses to the .env file
     const addresses = [
       `NEXT_PUBLIC_USDT_USDC=${usdtUsdc}`,
@@ -150,7 +152,7 @@ async function main() {
       `NEXT_PUBLIC_USDT_WBTC=${usdtWbtc}`,
       `NEXT_PUBLIC_UTILITY1_UTILITY2=${utility1Utility2}`
     ];
-
+  
     await fs.appendFile(".env", `\n${addresses.join("\n")}\n`);
     console.log("Pool addresses successfully recorded.");
     console.table({
@@ -161,11 +163,13 @@ async function main() {
       USDT_UTILITY1: usdtUtility1,
       USDT_WBTC: usdtWbtc,
       UTILITY1_UTILITY2: utility1Utility2
-    })
+    });
+  
   } catch (error) {
     console.error("Error in main function:", error.reason || error.message || error);
     throw error;
   }
+  
 }
 
 
