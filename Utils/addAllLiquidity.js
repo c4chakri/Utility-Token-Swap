@@ -71,15 +71,15 @@ async function approveTokens(signer) {
   await utilityContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await wbtcContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utility2Contract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-  
+
   await usdtContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await solContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await usdcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await sosContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await sosContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
   await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-await wbtcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+  await wbtcContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+  await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 
   const provider = ethers.provider;
   const factory = new Contract(
@@ -125,7 +125,7 @@ async function addLiquidity(poolAddress, token0Address, token1Address, token0Sym
     tickUpper = Math.ceil(tickUpper / tickSpacing) * tickSpacing;
     const position = new Position({
       pool,
-      liquidity: JSBI.BigInt(ethers.utils.parseUnits("1", 18).toString()),
+      liquidity: JSBI.BigInt(ethers.utils.parseUnits("1000", 18).toString()),
       tickLower,
       tickUpper,
     });
@@ -184,7 +184,6 @@ async function main() {
   await addLiquidity(USDT_SOL, TETHER_ADDRESS, SOL_ADDRESS, "USDT", "SOL", owner, provider);
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", signer, provider);
   await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", owner, provider);
-  await addLiquidity(USDT_WBTC, TETHER_ADDRESS, WRAPPED_BITCOIN_ADDRESS, "USDT", "WBTC", owner, provider);
   await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
   //   await addLiquidity(USDC_SOS, USDC_ADDRESS, SOS_ADDRESS, "USDC", "SOS", owner, provider);
   //   await addLiquidity(SOL_SOS, SOL_ADDRESS, SOS_ADDRESS, "SOL", "SOS", owner, provider);
@@ -198,6 +197,6 @@ main()
   });
 
 /*
- 
 npx hardhat run --network localhost Utils/addAllLiquidity.js
 */
+

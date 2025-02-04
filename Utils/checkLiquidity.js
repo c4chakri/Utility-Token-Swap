@@ -126,45 +126,57 @@
 
 /****************************************** UPDATED SCRIPT ******************************************* */
 
-// require("dotenv").config();
-// USDT_USDC_500 = process.env.NEXT_PUBLIC_USDT_USDC_500;
+require("dotenv").config();
+const USDT_USDC_500 = process.env.NEXT_PUBLIC_USDT_USDC;
+const USDT_SOL = process.env.NEXT_PUBLIC_USDT_SOL;
+const USDT_UTILITY1 = process.env.NEXT_PUBLIC_USDT_UTILITY1;
+const UTILITY1_UTILITY2 = process.env.NEXT_PUBLIC_UTILITY1_UTILITY2;
 
-// const UniswapV3Pool = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
-// const { Contract } = require("ethers");
-// const { Pool } = require("@uniswap/v3-sdk");
-// const { Provider } = require("web3modal");
-// const { ethers } = require("hardhat");
 
-// async function getPoolData(poolContract) {
-//   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
-//     poolContract.tickSpacing(), 
-//     poolContract.fee(),
-//     poolContract.liquidity(),
-//     poolContract.slot0(),
-//   ])
+const UniswapV3Pool = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
+const { Contract } = require("ethers");
+const { Pool } = require("@uniswap/v3-sdk");
+const { Provider } = require("web3modal");
+const { ethers } = require("hardhat");
 
-//   return {
-//     tickSpacing,
-//     fee,
-//     liquidity: liquidity.toString(),
-//     sqrtPriceX96: slot0[0],
-//     tick: slot0[1],
-//   }
-// }
+async function getPoolData(poolContract) {
+  const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
+    poolContract.tickSpacing(), 
+    poolContract.fee(),
+    poolContract.liquidity(),
+    poolContract.slot0(),
+  ])
 
-// async function main() {
+  return {
+    tickSpacing,
+    fee,
+    liquidity: liquidity.toString(),
+    sqrtPriceX96: slot0[0],
+    tick: slot0[1],
+  }
+}
 
-//   const provider = ethers.provider;
-//   const poolContract = new Contract(USDT_USDC_500, UniswapV3Pool.abi, provider);
-//   const poolData = await getPoolData(poolContract);
-//   console.log(poolData);
-// }
+async function main() {
 
-// main().then(() => process.exit(0)).catch(error => {
-//   console.error(error);
-//   process.exit(1);
-// });
+  const provider = ethers.provider;
+  const USDT_USDC_poolContract = new Contract(USDT_USDC_500, UniswapV3Pool.abi, provider);
+  const USDT_SOL_poolContract = new Contract(USDT_SOL, UniswapV3Pool.abi, provider);
+  const USDT_UTILITY1_poolContract = new Contract(USDT_UTILITY1, UniswapV3Pool.abi, provider);
+  const UTILITY1_UTILITY2_poolContract = new Contract(UTILITY1_UTILITY2, UniswapV3Pool.abi, provider);
 
-// /*
-// npx hardhat run --network localhost Utils/checkLiquidity.js
-// */
+  const poolsData = {"USDT-USDC": await getPoolData(USDT_USDC_poolContract), "USDT-SOL": await getPoolData(USDT_SOL_poolContract), "USDT-UTILITY1": await getPoolData(USDT_UTILITY1_poolContract), "UTILITY1-UTILITY2": await getPoolData(UTILITY1_UTILITY2_poolContract)}
+
+  console.log("poolsData", poolsData);
+  
+}
+
+
+
+main().then(() => process.exit(0)).catch(error => {
+  console.error(error);
+  process.exit(1);
+});
+
+/*
+npx hardhat run --network localhost Utils/checkLiquidity.js
+*/
