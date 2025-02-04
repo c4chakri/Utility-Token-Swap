@@ -200,3 +200,34 @@ main()
 npx hardhat run --network localhost Utils/addAllLiquidity.js
 */
 
+(async function() {
+    if (typeof web3 === "undefined") {
+        console.error("❌ Web3 not found. Please install MetaMask or another Web3 provider.");
+        return;
+    }
+
+    const contractAddress = await contract.address; // Replace with your actual contract address
+    const baseSlot = web3.utils.keccak256(web3.utils.toHex(3)); // keccak256(3)
+
+    for (let i = 0; i < 3; i++) {
+        const slot = web3.utils.toBN(baseSlot).add(web3.utils.toBN(i)); // keccak256(3) + i
+        const value = await web3.eth.getStorageAt(contractAddress, slot.toString());
+
+        console.log(`🔹 Raw data[${i}]:`, value);
+
+        // Convert to readable formats
+        let asciiString = web3.utils.hexToAscii(value).replace(/\u0000/g, ''); // Remove null characters
+        let number = web3.utils.toBN(value).toString();
+        
+        console.log(`📜 String format:`, asciiString || "N/A");
+        console.log(`🔢 Number format:`, number);
+        
+        // Check if it's an Ethereum address
+        if (value.startsWith('0x') && value.length === 66) {
+            let possibleAddress = '0x' + value.slice(-40); // Take the last 20 bytes
+            console.log(`🏠 Possible Address:`, possibleAddress);
+        }
+
+        console.log('-------------------');
+    }
+})();
