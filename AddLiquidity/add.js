@@ -7,16 +7,16 @@ const { Token } = require("@uniswap/sdk-core");
 const JSBI = require("jsbi");
 require("dotenv").config();
 
-const positionManagerAddress = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
-const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
+const positionManagerAddress = process.env.POSITION_MANAGER_ADDRESS;
+const FACTORY_ADDRESS = process.env.FACTORY_ADDRESS;
 // Pool addresses
 
-const UTILITY1_UTILITY2 = process.env.NEXT_PUBLIC_UTILITY1_UTILITY2;
+const UTILITY1_UTILITY2 = process.env.UTILITY1_UTILITY2;
 
 // Token addresses 
 
-const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
-const UTILITY2_ADDRESS = process.env.NEXT_PUBLIC_UTILITY2_ADDRESS;
+const UTILITY1_ADDRESS = process.env.UTILITY1_ADDRESS;
+const UTILITY2_ADDRESS = process.env.UTILITY2_ADDRESS;
 // Import necessary contract ABIs
 const artifacts = {
     UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
@@ -45,15 +45,14 @@ async function getPoolData(poolContract) {
 
 // Approve tokens for a specific user
 async function approveTokens(signer) {
-
     const utilityContract = new Contract(UTILITY1_ADDRESS, artifacts.utility.abi, signer);
     const utility2Contract = new Contract(UTILITY2_ADDRESS, artifacts.utility.abi, signer);
 
     await utilityContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
     await utility2Contract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 
-    await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
     await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
+    await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
 
     const provider = ethers.provider;
     const factory = new Contract(
@@ -63,6 +62,7 @@ async function approveTokens(signer) {
     );
 
 
+   
 
 
 }
@@ -74,8 +74,8 @@ async function addLiquidity(poolAddress, token0Address, token1Address, token0Sym
         const poolContract = new Contract(poolAddress, artifacts.UniswapV3Pool.abi, provider);
         const poolData = await getPoolData(poolContract);
 
-        const tokenA = new Token(31337, token0Address, 18, token0Symbol, token0Symbol);
-        const tokenB = new Token(31337, token1Address, 18, token1Symbol, token1Symbol);
+        const tokenA = new Token(11155111, token0Address, 18, token0Symbol, token0Symbol);
+        const tokenB = new Token(11155111, token1Address, 18, token1Symbol, token1Symbol);
 
         const token0 = token0Address.toLowerCase() < token1Address.toLowerCase() ? tokenA : tokenB;
         const token1 = token0Address.toLowerCase() < token1Address.toLowerCase() ? tokenB : tokenA;
@@ -95,7 +95,7 @@ async function addLiquidity(poolAddress, token0Address, token1Address, token0Sym
         tickUpper = Math.ceil(tickUpper / tickSpacing) * tickSpacing;
         const position = new Position({
             pool,
-            liquidity: JSBI.BigInt(ethers.utils.parseUnits("10", 18).toString()),
+            liquidity: JSBI.BigInt(ethers.utils.parseUnits("1000", 18).toString()),
             tickLower,
             tickUpper,
         });
@@ -124,12 +124,14 @@ async function addLiquidity(poolAddress, token0Address, token1Address, token0Sym
         );
 
         try {
-            const tx = await nonfungiblePositionManager.mint(params, { gasLimit: 2000000 });
+            console.log("Adding liquidity...");
+            
+            const tx = await nonfungiblePositionManager.connect(signer).mint(params, { gasLimit: 2000000 });
             await tx.wait();
             console.log(`Added liquidity to ${token0Symbol}/${token1Symbol} pool at ${poolAddress}`);
 
         } catch (error) {
-            console.error("Transaction Reverted:", error.reason || error);
+            console.error("Transaction Reverted:",error, error.reason || error);
         }
 
     } catch (error) {
@@ -145,18 +147,10 @@ async function main() {
     const provider = ethers.provider;
 
     // Approve tokens
-      await approveTokens(owner);
     await approveTokens(signer);
 
-    // Add liquidity to individual pools
-
-    // await addLiquidity(USDT_USDC_500, TETHER_ADDRESS, USDC_ADDRESS, "USDT", "USDC", owner, provider);
-    // await addLiquidity(USDT_SOL, TETHER_ADDRESS, SOL_ADDRESS, "USDT", "SOL", owner, provider);
-    // await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", signer, provider);
-    // await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", owner, provider);
-    await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
-    //   await addLiquidity(USDC_SOS, USDC_ADDRESS, SOS_ADDRESS, "USDC", "SOS", owner, provider);
-    //   await addLiquidity(SOL_SOS, SOL_ADDRESS, SOS_ADDRESS, "SOL", "SOS", owner, provider);
+    
+  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", signer, provider);
 }
 
 main()
@@ -167,7 +161,6 @@ main()
     });
 
 /*
-npx hardhat run --network localhost Utils/addLiquidity.js
+npx hardhat run --network localhost Utils/add.js
 */
-
 

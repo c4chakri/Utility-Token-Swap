@@ -1,6 +1,7 @@
+
 // require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-waffle");
-
+require("dotenv").config();
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
@@ -26,33 +27,13 @@ module.exports = {
           timeout: 60000,       // Increase timeout to 60 seconds
         },
       },
-      
     },
+    sepolia: {
+      url: `${process.env.SEPOLIA_RPC_URL}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`,`0x${process.env.SIGNER_KEY}`],
+    }
   },
   mocha: {
     before_timeout: 220000 // <--- units in ms
   },
 };
-
-// require("@nomiclabs/hardhat-waffle");
-
-// module.exports = {
-//   solidity: {
-//     version: "0.7.6",
-//     settings: {
-//       optimizer: {
-//         enabled: true,
-//         runs: 5000,
-//         details: { yul: false },
-//       },
-//     },
-//   },
-//   networks: {
-//     hardhat: {
-//       forking: {
-//         url: "your",
-//         accounts: [`0x${"your"}`],
-//       },
-//     },
-//   },
-// };
