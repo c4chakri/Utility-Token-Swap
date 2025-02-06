@@ -1,8 +1,6 @@
-const { ContractFactory, utils ,Wallet} = require("ethers");
-const WETH9 = require("../Context/WETH9.json");
+const { ContractFactory, utils, Wallet } = require("ethers");
 const fs = require("fs");
 const { promisify } = require("util");
-// const {SEPOLIA_RPC_URL,PRIVATE_KEY } = require("../constants.js");
 require("dotenv").config();
 
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL;
@@ -14,15 +12,15 @@ const artifacts = {
   NFTDescriptor: require("@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json"),
   NonfungibleTokenPositionDescriptor: require("@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json"),
   NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
-  WETH9,
 };
 
 const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC_URL);
 const wallet = new Wallet(PRIVATE_KEY);
 
+const weth = process.env.WETH_ADDRESS;
+const nftDescriptor = process.env.NFT_DESCRIPTOR_ADDRESS;
 const signer = wallet.connect(provider);
 
-// console.log("Signer:",  signer.address);
 
 
 const linkLibraries = ({ bytecode, linkReferences }, libraries) => {
@@ -50,36 +48,9 @@ const linkLibraries = ({ bytecode, linkReferences }, libraries) => {
 
 
 async function main() {
-  const [owner] = await ethers.getSigners();
+  // const [owner] = await ethers.getSigners();
+  const owner = signer;
 
-
-  Weth = new ContractFactory(
-    artifacts.WETH9.abi,
-    artifacts.WETH9.bytecode,
-    owner
-  );
-  weth = await Weth.deploy();
-
-  Factory = new ContractFactory(
-    artifacts.UniswapV3Factory.abi,
-    artifacts.UniswapV3Factory.bytecode,
-    owner
-  );
-  factory = await Factory.deploy();
-
-  SwapRouter = new ContractFactory(
-    artifacts.SwapRouter.abi,
-    artifacts.SwapRouter.bytecode,
-    owner
-  );
-  swapRouter = await SwapRouter.deploy(factory.address, weth.address);
-
-  NFTDescriptor = new ContractFactory(
-    artifacts.NFTDescriptor.abi,
-    artifacts.NFTDescriptor.bytecode,
-    owner
-  );
-  nftDescriptor = await NFTDescriptor.deploy();
   const linkedBytecode = linkLibraries(
     {
       bytecode: artifacts.NonfungibleTokenPositionDescriptor.bytecode,
@@ -95,7 +66,7 @@ async function main() {
       },
     },
     {
-      NFTDescriptor: nftDescriptor.address,
+      NFTDescriptor: nftDescriptor,
     }
   );
 
@@ -108,43 +79,24 @@ async function main() {
   const nativeCurrencyLabelBytes = utils.formatBytes32String("WETH");
   nonfungibleTokenPositionDescriptor =
     await NonfungibleTokenPositionDescriptor.deploy(
-      weth.address,
+      weth,
       nativeCurrencyLabelBytes
     );
 
-  NonfungiblePositionManager = new ContractFactory(
-    artifacts.NonfungiblePositionManager.abi,
-    artifacts.NonfungiblePositionManager.bytecode,
-    owner
-  );
-  nonfungiblePositionManager = await NonfungiblePositionManager.deploy(
-    factory.address,
-    weth.address,
-    nonfungibleTokenPositionDescriptor.address
-  );
-
   let addresses = [
-    `NEXT_PUBLIC_WETH_ADDRESS=${weth.address}`,
-    `NEXT_PUBLIC_FACTORY_ADDRESS=${factory.address}`,
-    `NEXT_PUBLIC_SWAP_ROUTER_ADDRESS=${swapRouter.address}`,
-    `NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS=${nftDescriptor.address}`,
-    `NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
-    `NEXT_PUBLIC_POSITION_MANAGER_ADDRESS=${nonfungiblePositionManager.address}`,
+    `POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
   ];
-  const data = addresses.join("\n");
+  const data = addresses.join("\n") + "\n"; // Ensure a newline for proper formatting
 
-  const writeFile = promisify(fs.appendFile);
+  const appendFile = promisify(fs.appendFile);
   const filePath = ".env";
-  return writeFile(filePath, data)
+
+  return appendFile(filePath, data)
     .then(() => {
       console.log("Addresses recorded.");
       console.table({
-        WETH_ADDRESS: weth.address,
-        FACTORY_ADDRESS: factory.address,
-        SWAP_ROUTER_ADDRESS: swapRouter.address,
-        NFT_DESCRIPTOR_ADDRESS: nftDescriptor.address,
-        POSITION_DESCRIPTOR_ADDRESS: nonfungibleTokenPositionDescriptor.address,
-        POSITION_MANAGER_ADDRESS: nonfungiblePositionManager.address,
+        WETH_ADDRESS: weth,
+        POSITION_DESCRIPTOR_ADDRESS: nonfungibleTokenPositionDescriptor.address
 
       })
     })
@@ -155,7 +107,10 @@ async function main() {
 }
 
 /*
-npx hardhat run --network localhost Utils/01_deployContracts.js
+npx hardhat run --network localhost DeploymentScripts/05_PositionDescriptor.js
+npx hardhat run --network sepolia DeploymentScripts/05_PositionDescriptor.js
+
+
 */
 
 main()
