@@ -1,32 +1,37 @@
 require("dotenv").config();
-const { Contract, BigNumber } = require("ethers");
+const { Contract, BigNumber ,Wallet} = require("ethers");
 const ethers = require("ethers");
 const bn = require("bignumber.js");
 const fs = require("fs/promises");
 
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
 
-const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
-const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
-const SOS_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS;
 
-const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
-const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
-const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
-const NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
-const POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
-const POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
+require("dotenv").config();
 
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+
+const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC_URL);
+const wallet = new Wallet(PRIVATE_KEY);
+const signer = wallet.connect(provider);
+
+
+const UTILITY1_ADDRESS = process.env.UTILITY1_ADDRESS;
+const UTILITY2_ADDRESS = process.env.UTILITY2_ADDRESS;
+const FACTORY_ADDRESS = process.env.FACTORY_ADDRESS;
+const POSITION_MANAGER_ADDRESS = process.env.POSITION_MANAGER_ADDRESS;
+
+console.table({
+  UTILITY1_ADDRESS,
+  UTILITY2_ADDRESS,
+  FACTORY_ADDRESS,
+  POSITION_MANAGER_ADDRESS
+})
 const artifacts = {
   UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
   NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
 };
-
-const hardhatURL = "http://localhost:8545";
-const provider = new ethers.providers.JsonRpcProvider(hardhatURL);
-const signer = provider.getSigner();
 
 function encodePriceSqrt(reserve1, reserve0) {
   return BigNumber.from(
@@ -59,7 +64,7 @@ async function deployPool(token0, token1, fee, price) {
   const poolAddress = await factory.getPool(token0, token1, fee);
   if (poolAddress && poolAddress !== ethers.constants.AddressZero) {
     console.log("Pool already exists at:", poolAddress);
-    return poolAddress; // Don't proceed with creation
+    return poolAddress;
   }
   if (poolAddress !== ethers.constants.AddressZero) {
     console.log("Pool already exists at:", poolAddress);
@@ -75,14 +80,7 @@ async function deployPool(token0, token1, fee, price) {
     await tx.wait();
 
     const newPoolAddress = await factory.getPool(token0, token1, fee);
-    console.log(
-      "Pool deployed for token0:",
-      token0,
-      "and token1:",
-      token1,
-      "at:",
-      newPoolAddress
-    );
+
     return newPoolAddress;
   } catch (error) {
     console.error("Error deploying pool:", error.message || error);
@@ -92,52 +90,34 @@ async function deployPool(token0, token1, fee, price) {
 
 async function main() {
   try {
-    // Deploy USDT/USDC pair
-    const usdtUsdc = await deployPool(
-      TETHER_ADDRESS,
-      USDC_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1) // Customize the ratio if necessary
+    
+  
+    // Deploy UTILITY1/UTILITY2 pair with 1% fee and 1:3 price ratio
+    const utility1Utility2 = await deployPool(
+      UTILITY1_ADDRESS,
+      UTILITY2_ADDRESS,
+      10000, // 1% fee
+      encodePriceSqrt(1, 3) // UTILITY1 is worth 1/3 of UTILITY2
     );
-
-    // Deploy USDT/SOL pair
-    const usdtSol = await deployPool(
-      TETHER_ADDRESS,
-      SOL_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    );
-
-    // Deploy USDC/SOS pair
-    const usdcSos = await deployPool(
-      USDC_ADDRESS,
-      SOS_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    );
-
-    // Deploy SOL/SOS pair
-    const solSos = await deployPool(
-      SOL_ADDRESS,
-      SOS_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    );
-
+  
+  
     // Record addresses to the .env file
     const addresses = [
-      `NEXT_PUBLIC_USDT_USDC=${usdtUsdc}`,
-      `NEXT_PUBLIC_USDT_SOL=${usdtSol}`,
-      `NEXT_PUBLIC_USDC_SOS=${usdcSos}`,
-      `NEXT_PUBLIC_SOL_SOS=${solSos}`,
+      `UTILITY1_UTILITY2=${utility1Utility2}`
     ];
-
+  
     await fs.appendFile(".env", `\n${addresses.join("\n")}\n`);
     console.log("Pool addresses successfully recorded.");
+    console.table({
+      
+      UTILITY1_UTILITY2: utility1Utility2
+    });
+  
   } catch (error) {
     console.error("Error in main function:", error.reason || error.message || error);
     throw error;
   }
+  
 }
 
 
@@ -148,6 +128,7 @@ main()
     process.exit(1);
   });
 
-  /*
-  npx hardhat run --network localhost Utils/deployPool.js
-  */
+/*
+npx hardhat run --network sepolia DeployPools/deployPool.js
+
+*/

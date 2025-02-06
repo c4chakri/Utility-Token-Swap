@@ -5,22 +5,22 @@ const { promisify } = require("util");
 async function main() {
   const [owner, signer2] = await ethers.getSigners();
 
-  Tether = await ethers.getContractFactory("Tether");
-  tether = await Tether.deploy();
+//   Tether = await ethers.getContractFactory("Tether");
+//   tether = await Tether.deploy();
 
-  Usdc = await ethers.getContractFactory("UsdCoin");
-  usdc = await Usdc.deploy();
+//   Usdc = await ethers.getContractFactory("UsdCoin");
+//   usdc = await Usdc.deploy();
 
-  WrappedBitcoin = await ethers.getContractFactory("WrappedBitcoin");
-  wrappedBitcoin = await WrappedBitcoin.deploy();
-
-
-  SchoolOfLaw = await ethers.getContractFactory("SchoolOfLaw");
-  schoolOfLaw = await SchoolOfLaw.deploy();
+//   WrappedBitcoin = await ethers.getContractFactory("WrappedBitcoin");
+//   wrappedBitcoin = await WrappedBitcoin.deploy();
 
 
-  SchoolOfScience = await ethers.getContractFactory("SchoolOfScience");
-  schoolOfScience = await SchoolOfScience.deploy();
+//   SchoolOfLaw = await ethers.getContractFactory("SchoolOfLaw");
+//   schoolOfLaw = await SchoolOfLaw.deploy();
+
+
+//   SchoolOfScience = await ethers.getContractFactory("SchoolOfScience");
+//   schoolOfScience = await SchoolOfScience.deploy();
 
   const ut1Params = [
 
@@ -44,33 +44,33 @@ async function main() {
   utility2 = await Utility2.deploy(...ut1Params);
 
   // minting to sender
-  await tether.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
-  await usdc.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
-  await wrappedBitcoin.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
-  await schoolOfLaw.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
-  await schoolOfScience.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
+//   await tether.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
+//   await usdc.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
+//   await wrappedBitcoin.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
+//   await schoolOfLaw.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
+//   await schoolOfScience.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
 
   await utility1.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
   await utility2.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
 
   // utility1 balance of signer2
-  ut1Signer2Balance = await (utility1.balanceOf(signer2.address));
+//   ut1Signer2Balance = await (utility1.balanceOf(signer2.address));
 
 
-  await utility1.connect(signer2).transfer(owner.address, ethers.utils.parseEther("150"));
-  ut1OwnerBalance = await (utility1.balanceOf(owner.address));
+//   await utility1.connect(signer2).transfer(owner.address, ethers.utils.parseEther("150"));
+//   ut1OwnerBalance = await (utility1.balanceOf(owner.address));
 
- await utility2.connect(signer2).transfer(owner.address, ethers.utils.parseEther("150"));
- ut2OwnerBalance = await (utility2.balanceOf(owner.address));
+//  await utility2.connect(signer2).transfer(owner.address, ethers.utils.parseEther("150"));
+//  ut2OwnerBalance = await (utility2.balanceOf(owner.address));
 
 
   // record addresses
   let addresses = [
-    `NEXT_PUBLIC_USDC_ADDRESS=${usdc.address}`,
-    `NEXT_PUBLIC_TETHER_ADDRESS=${tether.address}`,
-    `NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
+    // `NEXT_PUBLIC_USDC_ADDRESS=${usdc.address}`,
+    // `NEXT_PUBLIC_TETHER_ADDRESS=${tether.address}`,
+    // `NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
+    // `NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
+    // `NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
     `NEXT_PUBLIC_UTILITY1_ADDRESS=${utility1.address}`,
     `NEXT_PUBLIC_UTILITY2_ADDRESS=${utility2.address}`,
   ];
@@ -82,11 +82,7 @@ async function main() {
     .then(() => {
       console.log("Addresses recorded.");
       console.table({
-        Tether: tether.address,
-        UsdCoin: usdc.address,
-        WrappedBitcoin: wrappedBitcoin.address,
-        SchoolOfLaw: schoolOfLaw.address,
-        SchoolOfScience: schoolOfScience.address,
+       
         Utility1: utility1.address,
         Utility2: utility2.address
       })
