@@ -6,18 +6,22 @@ const fs = require("fs/promises");
 
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
 
-const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
-const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-const SOL_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS;
-const SOS_ADDRESS = process.env.NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS;
+const TETHER_ADDRESS = process.env.MOBIUS_TETHER_ADDRESS;
+const USDC_ADDRESS = process.env.MOBIUS_USDC_ADDRESS;
+const SOL_ADDRESS = process.env.MOBIUS_SCHOOL_OF_LAW_ADDRESS;
+const SOS_ADDRESS = process.env.MOBIUS_SCHOOL_OF_SCIENCE_ADDRESS;
 
-const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
-const WETH_ADDRESS = process.env.NEXT_PUBLIC_WETH_ADDRESS;
-const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS;
-const NFT_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS;
-const POSITION_DESCRIPTOR_ADDRESS = process.env.NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS;
-const POSITION_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
+const WRAPPED_BITCOIN_ADDRESS = process.env.MOBIUS_WRAPPED_BITCOIN_ADDRESS;
+const WETH_ADDRESS = process.env.MOBIUS_WETH_ADDRESS;
+const FACTORY_ADDRESS = process.env.MOBIUS_FACTORY_ADDRESS;
+const SWAP_ROUTER_ADDRESS = process.env.MOBIUS_SWAP_ROUTER_ADDRESS;
+const NFT_DESCRIPTOR_ADDRESS = process.env.MOBIUS_NFT_DESCRIPTOR_ADDRESS;
+const POSITION_DESCRIPTOR_ADDRESS = process.env.MOBIUS_POSITION_DESCRIPTOR_ADDRESS;
+const POSITION_MANAGER_ADDRESS = process.env.MOBIUS_POSITION_MANAGER_ADDRESS;
+
+
+const UTILITY1_ADDRESS = process.env.MOBIUS_UTILITY1_ADDRESS;
+const UTILITY2_ADDRESS = process.env.MOBIUS_UTILITY2_ADDRESS;
 
 const artifacts = {
   UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
@@ -92,44 +96,54 @@ async function deployPool(token0, token1, fee, price) {
 
 async function main() {
   try {
-    // Deploy USDT/USDC pair
-    const usdtUsdc = await deployPool(
-      TETHER_ADDRESS,
-      USDC_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1) // Customize the ratio if necessary
-    );
+    // // Deploy USDT/USDC pair
+    // const usdtUsdc = await deployPool(
+    //   TETHER_ADDRESS,
+    //   USDC_ADDRESS,
+    //   500,
+    //   encodePriceSqrt(1, 1) // Customize the ratio if necessary
+    // );
 
-    // Deploy USDT/SOL pair
-    const usdtSol = await deployPool(
-      TETHER_ADDRESS,
-      SOL_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    );
+    // // Deploy USDT/SOL pair
+    // const usdtSol = await deployPool(
+    //   TETHER_ADDRESS,
+    //   SOL_ADDRESS,
+    //   500,
+    //   encodePriceSqrt(1, 1)
+    // );
 
-    // Deploy USDC/SOS pair
-    const usdcSos = await deployPool(
-      USDC_ADDRESS,
-      SOS_ADDRESS,
-      500,
-      encodePriceSqrt(1, 1)
-    );
+    // // Deploy USDC/SOS pair
+    // const usdcSos = await deployPool(
+    //   USDC_ADDRESS,
+    //   SOS_ADDRESS,
+    //   500,
+    //   encodePriceSqrt(1, 1)
+    // );
 
-    // Deploy SOL/SOS pair
-    const solSos = await deployPool(
-      SOL_ADDRESS,
-      SOS_ADDRESS,
+    // // Deploy SOL/SOS pair
+    // const solSos = await deployPool(
+    //   SOL_ADDRESS,
+    //   SOS_ADDRESS,
+    //   500,
+    //   encodePriceSqrt(1, 1)
+    // );
+
+
+    // Deploy Utility1/Utility2 pair
+    const utility1Utility2 = await deployPool(
+      UTILITY1_ADDRESS,
+      UTILITY2_ADDRESS,
       500,
       encodePriceSqrt(1, 1)
     );
 
     // Record addresses to the .env file
     const addresses = [
-      `NEXT_PUBLIC_USDT_USDC=${usdtUsdc}`,
-      `NEXT_PUBLIC_USDT_SOL=${usdtSol}`,
-      `NEXT_PUBLIC_USDC_SOS=${usdcSos}`,
-      `NEXT_PUBLIC_SOL_SOS=${solSos}`,
+      // `MOBIUS_USDT_USDC=${usdtUsdc}`,
+      // `MOBIUS_USDT_SOL=${usdtSol}`,
+      // `MOBIUS_USDC_SOS=${usdcSos}`,
+      // `MOBIUS_SOL_SOS=${solSos}`,
+      `MOBIUS_UTILITY1_UTILITY2=${utility1Utility2}`,
     ];
 
     await fs.appendFile(".env", `\n${addresses.join("\n")}\n`);
@@ -149,5 +163,5 @@ main()
   });
 
   /*
-  npx hardhat run --network localhost Utils/deployPool.js
+npx hardhat run --network localhost Utils/03_deployPools.js
   */

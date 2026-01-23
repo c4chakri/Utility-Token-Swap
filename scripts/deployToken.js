@@ -108,16 +108,16 @@ async function main() {
 
   // record addresses
   let addresses = [
-    `NEXT_PUBLIC_USDC_ADDRESS=${usdc.address}`,
-    `NEXT_PUBLIC_TETHER_ADDRESS=${tether.address}`,
-    `NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_ARCH_PLANNING_ADDRESS=${schoolOfArchPlanning.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_ARTS_HUMANITIES_ADDRESS=${schoolOLibArtsHumanities.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_ARTS_DESIGN_ADDRESS=${schoolOfArtsDesign.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_BUSINESS_ADDRESS=${schoolOfBusiness.address}`,
-    `NEXT_PUBLIC_SCHOOL_OF_TECH_ADDRESS=${schoolOfTech.address}`,
+    `MOBIUS_USDC_ADDRESS=${usdc.address}`,
+    `MOBIUS_TETHER_ADDRESS=${tether.address}`,
+    `MOBIUS_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
+    `MOBIUS_SCHOOL_OF_ARCH_PLANNING_ADDRESS=${schoolOfArchPlanning.address}`,
+    `MOBIUS_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
+    `MOBIUS_SCHOOL_OF_ARTS_HUMANITIES_ADDRESS=${schoolOLibArtsHumanities.address}`,
+    `MOBIUS_SCHOOL_OF_ARTS_DESIGN_ADDRESS=${schoolOfArtsDesign.address}`,
+    `MOBIUS_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
+    `MOBIUS_SCHOOL_OF_BUSINESS_ADDRESS=${schoolOfBusiness.address}`,
+    `MOBIUS_SCHOOL_OF_TECH_ADDRESS=${schoolOfTech.address}`,
   ];
   const data = "\n" + addresses.join("\n");
 
@@ -146,7 +146,7 @@ async function main() {
 }
 
 /*
-  npx hardhat run --network localhost Utils/02_deployTokens.js
+npx hardhat run --network localhost Utils/02_deployTokens.js
 */
 
 main()

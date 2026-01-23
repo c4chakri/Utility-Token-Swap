@@ -1,173 +1,192 @@
-/*************************************UPDATED LIQUIDITY SCRIPT*************************************/
+/*************************************
+ * UNISWAP V3 ADD LIQUIDITY – DEBUG SAFE
+ *************************************/
 
 const { ethers } = require("hardhat");
 const { Contract } = require("ethers");
 const { Pool, Position, nearestUsableTick } = require("@uniswap/v3-sdk");
 const { Token } = require("@uniswap/sdk-core");
-const JSBI = require("jsbi");
 require("dotenv").config();
 
-const positionManagerAddress = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
-const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-// Pool addresses
+/* ================= ENV ================= */
 
-const UTILITY1_UTILITY2 = process.env.NEXT_PUBLIC_UTILITY1_UTILITY2;
+const POSITION_MANAGER = process.env.MOBIUS_POSITION_MANAGER_ADDRESS;
+const POOL_ADDRESS = process.env.MOBIUS_UTILITY1_UTILITY2;
 
-// Token addresses 
+const TOKEN_A = process.env.MOBIUS_UTILITY1_ADDRESS;
+const TOKEN_B = process.env.MOBIUS_UTILITY2_ADDRESS;
 
-const UTILITY1_ADDRESS = process.env.NEXT_PUBLIC_UTILITY1_ADDRESS;
-const UTILITY2_ADDRESS = process.env.NEXT_PUBLIC_UTILITY2_ADDRESS;
-// Import necessary contract ABIs
+/* ================= ABIS ================= */
+
 const artifacts = {
-    UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
-    NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
-    UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
-    utility: require("../artifacts/contracts/UT1.sol/Utility1.json"),
+  Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
+  PositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
+  ERC20: require("../artifacts/contracts/UT1.sol/Utility1.json"),
 };
 
-// Fetch pool data
-async function getPoolData(poolContract) {
-    const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
-        poolContract.tickSpacing(),
-        poolContract.fee(),
-        poolContract.liquidity(),
-        poolContract.slot0(),
+/* ================= HELPERS ================= */
+
+async function approve(token, owner, amount) {
+  const tx = await token.connect(owner).approve(POSITION_MANAGER, amount);
+  await tx.wait();
+}
+
+/* ================= MAIN LOGIC ================= */
+
+async function addLiquidity() {
+  const [owner,signer] = await ethers.getSigners();
+  const provider = ethers.provider;
+
+  console.log("\n================ START =================");
+  console.log("LP Signer:", signer.address);
+
+  /* ---------- Pool ---------- */
+
+  const pool = new Contract(POOL_ADDRESS, artifacts.Pool.abi, provider);
+
+  const [poolToken0, poolToken1, fee, liquidity, slot0, tickSpacing] =
+    await Promise.all([
+      pool.token0(),
+      pool.token1(),
+      pool.fee(),
+      pool.liquidity(),
+      pool.slot0(),
+      pool.tickSpacing(),
     ]);
 
-    return {
-        tickSpacing,
-        fee,
-        liquidity,
-        sqrtPriceX96: slot0.sqrtPriceX96,
-        tick: slot0.tick,
-    };
+  console.log("\n=== POOL STATE ===");
+  console.log("token0:", poolToken0);
+  console.log("token1:", poolToken1);
+  console.log("sqrtPriceX96:", slot0.sqrtPriceX96.toString());
+  console.log("tick:", slot0.tick.toString());
+
+  if (slot0.sqrtPriceX96.eq(0)) {
+    throw new Error("❌ Pool not initialized");
+  }
+
+  /* ---------- Tokens ---------- */
+
+  const erc20_0 = new Contract(poolToken0, artifacts.ERC20.abi, provider);
+  const erc20_1 = new Contract(poolToken1, artifacts.ERC20.abi, provider);
+
+
+
+  const [dec0, dec1, bal0, bal1] = await Promise.all([
+    erc20_0.decimals(),
+    erc20_1.decimals(),
+    erc20_0.balanceOf(signer.address),
+    erc20_1.balanceOf(signer.address),
+  ]);
+
+  console.log("\n=== TOKEN STATE ===");
+  console.log("Decimals token0:", dec0);
+  console.log("Decimals token1:", dec1);
+  console.log("Balance token0:", bal0.toString());
+  console.log("Balance token1:", bal1.toString());
+
+  if (bal0.eq(0) || bal1.eq(0)) {
+    throw new Error("❌ Signer has zero token balance");
+  }
+
+  /* ---------- Approvals ---------- */
+
+  console.log("\n=== APPROVALS ===");
+  await approve(erc20_0, signer, ethers.constants.MaxUint256);
+  await approve(erc20_1, signer, ethers.constants.MaxUint256);
+
+  const [allow0, allow1] = await Promise.all([
+    erc20_0.allowance(signer.address, POSITION_MANAGER),
+    erc20_1.allowance(signer.address, POSITION_MANAGER),
+  ]);
+
+  console.log("Allowance token0:", allow0.toString());
+  console.log("Allowance token1:", allow1.toString());
+
+  /* ---------- SDK Tokens ---------- */
+
+  const token0 = new Token(31337, poolToken0, dec0);
+  const token1 = new Token(31337, poolToken1, dec1);
+
+  const sdkPool = new Pool(
+    token0,
+    token1,
+    fee,
+    slot0.sqrtPriceX96.toString(),
+    liquidity.toString(),
+    slot0.tick
+  );
+
+  /* ---------- Ticks ---------- */
+
+  const tickLower =
+    nearestUsableTick(slot0.tick, tickSpacing) - tickSpacing * 2;
+  const tickUpper =
+    nearestUsableTick(slot0.tick, tickSpacing) + tickSpacing * 2;
+
+  console.log("\n=== TICKS ===");
+  console.log("tickLower:", tickLower);
+  console.log("tickUpper:", tickUpper);
+
+  /* ---------- Position ---------- */
+
+  const position = Position.fromAmounts({
+    pool: sdkPool,
+    tickLower,
+    tickUpper,
+    amount0: ethers.utils.parseUnits("10", dec0).toString(),
+    amount1: ethers.utils.parseUnits("10", dec1).toString(),
+    useFullPrecision: true,
+  });
+
+  const { amount0, amount1 } = position.mintAmounts;
+
+  console.log("\n=== MINT AMOUNTS ===");
+  console.log("amount0:", amount0.toString());
+  console.log("amount1:", amount1.toString());
+
+  /* ---------- Mint ---------- */
+
+  const manager = new Contract(
+    POSITION_MANAGER,
+    artifacts.PositionManager.abi,
+    signer
+  );
+
+  const params = {
+    token0: poolToken0,
+    token1: poolToken1,
+    fee,
+    tickLower,
+    tickUpper,
+    amount0Desired: amount0.toString(),
+    amount1Desired: amount1.toString(),
+    amount0Min: 0,
+    amount1Min: 0,
+    recipient: signer.address,
+    deadline: Math.floor(Date.now() / 1000) + 600,
+  };
+
+  console.log("\n=== MINTING POSITION ===");
+
+  const tx = await manager.mint(params, { gasLimit: 3_000_000 });
+  const receipt = await tx.wait();
+
+  console.log("✅ Liquidity added");
+  console.log("Tx:", receipt.transactionHash);
 }
 
-// Approve tokens for a specific user
-async function approveTokens(signer) {
+/* ================= RUN ================= */
 
-    const utilityContract = new Contract(UTILITY1_ADDRESS, artifacts.utility.abi, signer);
-    const utility2Contract = new Contract(UTILITY2_ADDRESS, artifacts.utility.abi, signer);
+addLiquidity()
+  .then(() => {
+    console.log("\n================ DONE =================");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("\n❌ FAILED:", err.message);
+    process.exit(1);
+  });
 
-    await utilityContract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-    await utility2Contract.approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-
-    await utilityContract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-    await utility2Contract.connect(signer).approve(positionManagerAddress, ethers.utils.parseUnits("1000", 18));
-
-    const provider = ethers.provider;
-    const factory = new Contract(
-        FACTORY_ADDRESS,
-        artifacts.UniswapV3Factory.abi,
-        provider
-    );
-
-
-
-
-}
-
-// Add liquidity to a specific pool
-async function addLiquidity(poolAddress, token0Address, token1Address, token0Symbol, token1Symbol, signer, provider) {
-    try {
-
-        const poolContract = new Contract(poolAddress, artifacts.UniswapV3Pool.abi, provider);
-        const poolData = await getPoolData(poolContract);
-
-        const tokenA = new Token(31337, token0Address, 18, token0Symbol, token0Symbol);
-        const tokenB = new Token(31337, token1Address, 18, token1Symbol, token1Symbol);
-
-        const token0 = token0Address.toLowerCase() < token1Address.toLowerCase() ? tokenA : tokenB;
-        const token1 = token0Address.toLowerCase() < token1Address.toLowerCase() ? tokenB : tokenA;
-
-        const pool = new Pool(
-            token0,
-            token1,
-            poolData.fee,
-            poolData.sqrtPriceX96,
-            poolData.liquidity,
-            poolData.tick
-        );
-        const tickSpacing = await poolContract.tickSpacing();
-        let tickLower = nearestUsableTick(poolData.tick, poolData.tickSpacing) - poolData.tickSpacing * 2;
-        let tickUpper = nearestUsableTick(poolData.tick, poolData.tickSpacing) + poolData.tickSpacing * 2;
-        tickLower = Math.floor(tickLower / tickSpacing) * tickSpacing;
-        tickUpper = Math.ceil(tickUpper / tickSpacing) * tickSpacing;
-        const position = new Position({
-            pool,
-            liquidity: JSBI.BigInt(ethers.utils.parseUnits("10", 18).toString()),
-            tickLower,
-            tickUpper,
-        });
-
-        const { amount0: amount0Desired, amount1: amount1Desired } = position.mintAmounts;
-
-        const params = {
-            token0: token0Address,
-            token1: token1Address,
-            fee: poolData.fee,
-            tickLower,
-            tickUpper,
-            amount0Desired: ethers.BigNumber.from(amount0Desired.toString()), // Convert to BigNumber
-            amount1Desired: ethers.BigNumber.from(amount1Desired.toString()), // Convert to BigNumber
-            amount0Min: 0,
-            amount1Min: 0,
-            recipient: signer.address,
-            deadline: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-        };
-
-
-        const nonfungiblePositionManager = new Contract(
-            positionManagerAddress,
-            artifacts.NonfungiblePositionManager.abi,
-            signer
-        );
-
-        try {
-            const tx = await nonfungiblePositionManager.mint(params, { gasLimit: 2000000 });
-            await tx.wait();
-            console.log(`Added liquidity to ${token0Symbol}/${token1Symbol} pool at ${poolAddress}`);
-
-        } catch (error) {
-            console.error("Transaction Reverted:", error.reason || error);
-        }
-
-    } catch (error) {
-        console.log("Error adding liquidity:", error.message || error);
-
-    }
-
-}
-
-// Main function
-async function main() {
-    const [owner, signer] = await ethers.getSigners();
-    const provider = ethers.provider;
-
-    // Approve tokens
-      await approveTokens(owner);
-    await approveTokens(signer);
-
-    // Add liquidity to individual pools
-
-    // await addLiquidity(USDT_USDC_500, TETHER_ADDRESS, USDC_ADDRESS, "USDT", "USDC", owner, provider);
-    // await addLiquidity(USDT_SOL, TETHER_ADDRESS, SOL_ADDRESS, "USDT", "SOL", owner, provider);
-    // await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", signer, provider);
-    // await addLiquidity(USDT_UTILITY1, TETHER_ADDRESS, UTILITY1_ADDRESS, "USDT", "UTILITY1", owner, provider);
-    await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
-    //   await addLiquidity(USDC_SOS, USDC_ADDRESS, SOS_ADDRESS, "USDC", "SOS", owner, provider);
-    //   await addLiquidity(SOL_SOS, SOL_ADDRESS, SOS_ADDRESS, "SOL", "SOS", owner, provider);
-}
-
-main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
-
-/*
-npx hardhat run --network localhost Utils/addLiquidity.js
-*/
-
-
+  /*
+  npx hardhat run --network localhost Utils/addLiquidity.js 
+  */

@@ -66,13 +66,13 @@ async function main() {
 
   // record addresses
   let addresses = [
-    // `NEXT_PUBLIC_USDC_ADDRESS=${usdc.address}`,
-    // `NEXT_PUBLIC_TETHER_ADDRESS=${tether.address}`,
-    // `NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
-    // `NEXT_PUBLIC_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
-    // `NEXT_PUBLIC_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
-    `NEXT_PUBLIC_UTILITY1_ADDRESS=${utility1.address}`,
-    `NEXT_PUBLIC_UTILITY2_ADDRESS=${utility2.address}`,
+    // `MOBIUS_USDC_ADDRESS=${usdc.address}`,
+    // `MOBIUS_TETHER_ADDRESS=${tether.address}`,
+    // `MOBIUS_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
+    // `MOBIUS_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
+    // `MOBIUS_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
+    `MOBIUS_UTILITY1_ADDRESS=${utility1.address}`,
+    `MOBIUS_UTILITY2_ADDRESS=${utility2.address}`,
   ];
   const data = "\n" + addresses.join("\n");
 

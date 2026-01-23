@@ -3,15 +3,12 @@ const { Contract } = require("ethers");
 require("dotenv").config();
 
 // Provided addresses
-const SWAP_ROUTER_ADDRESS = process.env.SWAP_ROUTER_ADDRESS;
+const SWAP_ROUTER_ADDRESS = process.env.MOBIUS_SWAP_ROUTER_ADDRESS;
 
 
-const UTILITY1_ADDRESS = process.env.UTILITY1_ADDRESS;
+const UTILITY1_ADDRESS = process.env.MOBIUS_UTILITY1_ADDRESS;
 
-const UTILITY2_ADDRESS = process.env.UTILITY2_ADDRESS;
-
-
-
+const UTILITY2_ADDRESS = process.env.MOBIUS_UTILITY2_ADDRESS;
 const artifacts = {
   UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
   SwapRouter: require("@uniswap/v3-periphery/artifacts/contracts/interfaces/ISwapRouter.sol/ISwapRouter.json"),
@@ -51,7 +48,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   const tokenInContract = new Contract(tokenIn, artifacts.ERC20.abi, deployer);
 
   // balances of deployer and signer
-  // tokenInContract.connect(signer).transfer(deployer.address, amountIn);
+  await tokenInContract.connect(signer).transfer(deployer.address, amountIn);
 
   console.log("bal of deployer", await tokenInContract.balanceOf(deployer.address));
   console.log("bal of signer", await tokenInContract.balanceOf(signer.address));
@@ -175,7 +172,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   }
 }
 
-let poolAddress = process.env.UTILITY1_UTILITY2;
+let poolAddress = process.env.MOBIUS_UTILITY1_UTILITY2;
 let tokenIn = UTILITY1_ADDRESS;
 let tokenOut = UTILITY2_ADDRESS;
 let amountIn = ethers.utils.parseUnits("1", 18);

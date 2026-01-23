@@ -124,12 +124,12 @@ async function main() {
   );
 
   let addresses = [
-    `NEXT_PUBLIC_WETH_ADDRESS=${weth.address}`,
-    `NEXT_PUBLIC_FACTORY_ADDRESS=${factory.address}`,
-    `NEXT_PUBLIC_SWAP_ROUTER_ADDRESS=${swapRouter.address}`,
-    `NEXT_PUBLIC_NFT_DESCRIPTOR_ADDRESS=${nftDescriptor.address}`,
-    `NEXT_PUBLIC_POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
-    `NEXT_PUBLIC_POSITION_MANAGER_ADDRESS=${nonfungiblePositionManager.address}`,
+    `MOBIUS_WETH_ADDRESS=${weth.address}`,
+    `MOBIUS_FACTORY_ADDRESS=${factory.address}`,
+    `MOBIUS_SWAP_ROUTER_ADDRESS=${swapRouter.address}`,
+    `MOBIUS_NFT_DESCRIPTOR_ADDRESS=${nftDescriptor.address}`,
+    `MOBIUS_POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
+    `MOBIUS_POSITION_MANAGER_ADDRESS=${nonfungiblePositionManager.address}`,
   ];
   const data = addresses.join("\n");
 

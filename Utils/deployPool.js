@@ -9,8 +9,8 @@ bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
 
 // Uniswap V3 contract addresses
 //These are the ywo contracts will allow us ti add liquidity to the pool for new token like SHOW, RAY, and more
-const UNISWAP_V3_FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS;
-const NON_FUNGABLE_MANAGER = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
+const UNISWAP_V3_FACTORY_ADDRESS = process.env.MOBIUS_FACTORY_ADDRESS;
+const NON_FUNGABLE_MANAGER = process.env.MOBIUS_POSITION_MANAGER_ADDRESS;
 
 // Import Uniswap V3 contract ABIs
 const artifacts = {
