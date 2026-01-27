@@ -3,12 +3,12 @@ const { Contract } = require("ethers");
 require("dotenv").config();
 
 // Provided addresses
-const SWAP_ROUTER_ADDRESS = process.env.MOBIUS_SWAP_ROUTER_ADDRESS;
+const SWAP_ROUTER_ADDRESS = "0xdaaA6cc6Cec84401461A8379437f88FE6062AD6F";
 
 
-const UTILITY1_ADDRESS = process.env.MOBIUS_UTILITY1_ADDRESS;
+const UTILITY1_ADDRESS = "0x5ae55038733F4f5311a86D53aFd01c4f56Aa0c5E";
 
-const UTILITY2_ADDRESS = process.env.MOBIUS_UTILITY2_ADDRESS;
+const UTILITY2_ADDRESS = "0xFDD3Ed693f28Bf0Ae2b9f4c9e87bc05668362F21";
 const artifacts = {
   UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
   SwapRouter: require("@uniswap/v3-periphery/artifacts/contracts/interfaces/ISwapRouter.sol/ISwapRouter.json"),
@@ -172,7 +172,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   }
 }
 
-let poolAddress = process.env.MOBIUS_UTILITY1_UTILITY2;
+let poolAddress = "0xd2e5C0519dc65d2Ac917d0E860C4D75e33A3D940";
 let tokenIn = UTILITY1_ADDRESS;
 let tokenOut = UTILITY2_ADDRESS;
 let amountIn = ethers.utils.parseUnits("1", 18);

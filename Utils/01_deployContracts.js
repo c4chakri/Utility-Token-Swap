@@ -123,13 +123,16 @@ async function main() {
     nonfungibleTokenPositionDescriptor.address
   );
 
+  const network = await provider.getNetwork();
+  const networkName = network.name.toUpperCase();
+  
   let addresses = [
-    `MOBIUS_WETH_ADDRESS=${weth.address}`,
-    `MOBIUS_FACTORY_ADDRESS=${factory.address}`,
-    `MOBIUS_SWAP_ROUTER_ADDRESS=${swapRouter.address}`,
-    `MOBIUS_NFT_DESCRIPTOR_ADDRESS=${nftDescriptor.address}`,
-    `MOBIUS_POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
-    `MOBIUS_POSITION_MANAGER_ADDRESS=${nonfungiblePositionManager.address}`,
+    `MOBIUS_${networkName}_WETH_ADDRESS=${weth.address}`,
+    `MOBIUS_${networkName}_FACTORY_ADDRESS=${factory.address}`,
+    `MOBIUS_${networkName}_SWAP_ROUTER_ADDRESS=${swapRouter.address}`,
+    `MOBIUS_${networkName}_NFT_DESCRIPTOR_ADDRESS=${nftDescriptor.address}`,
+    `MOBIUS_${networkName}_POSITION_DESCRIPTOR_ADDRESS=${nonfungibleTokenPositionDescriptor.address}`,
+    `MOBIUS_${networkName}_POSITION_MANAGER_ADDRESS=${nonfungiblePositionManager.address}`,
   ];
   const data = addresses.join("\n");
 
