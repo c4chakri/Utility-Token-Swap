@@ -17,14 +17,6 @@ const UTILITY1_UTILITY2 = process.env.UTILITY1_UTILITY2;
 
 const UTILITY1_ADDRESS = process.env.UTILITY1_ADDRESS;
 const UTILITY2_ADDRESS = process.env.UTILITY2_ADDRESS;
-
-console.table({
-    POSITION_MANAGER_ADDRESS: positionManagerAddress,
-    FACTORY_ADDRESS: FACTORY_ADDRESS,
-    UTILITY1_UTILITY2: UTILITY1_UTILITY2,
-    UTILITY1_ADDRESS: UTILITY1_ADDRESS,
-    UTILITY2_ADDRESS: UTILITY2_ADDRESS
-});
 // Import necessary contract ABIs
 const artifacts = {
     UniswapV3Factory: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"),
@@ -155,13 +147,10 @@ async function main() {
     const provider = ethers.provider;
 
     // Approve tokens
-    await approveTokens(owner);
-    // await approveTokens(signer);
+    await approveTokens(signer);
 
-    // Add liquidity
-    await addLiquidity(UTILITY1_UTILITY2, UTILITY1_ADDRESS, UTILITY2_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
-
-//  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", signer, provider);
+    
+  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", signer, provider);
 }
 
 main()
@@ -172,6 +161,6 @@ main()
     });
 
 /*
-npx hardhat run --network sepolia AddLiquidity/add.js
+npx hardhat run --network localhost Utils/add.js
 */
 
