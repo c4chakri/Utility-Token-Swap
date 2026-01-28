@@ -1,7 +1,7 @@
 
 require("dotenv").config();
 
-const UTILITY1_UTILITY2 = process.env.UTILITY1_UTILITY2;
+const UTILITY1_UTILITY2 = "0xd2e5C0519dc65d2Ac917d0E860C4D75e33A3D940";
 const UniswapV3Pool = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
 const { Contract ,Wallet} = require("ethers");
 const { Pool } = require("@uniswap/v3-sdk");

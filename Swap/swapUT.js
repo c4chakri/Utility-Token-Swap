@@ -3,12 +3,10 @@ const { Contract } = require("ethers");
 require("dotenv").config();
 
 // Provided addresses
-const SWAP_ROUTER_ADDRESS = "0xdaaA6cc6Cec84401461A8379437f88FE6062AD6F";
+const SWAP_ROUTER_ADDRESS = process.env.SWAP_ROUTER_ADDRESS;
+const UTILITY1_ADDRESS = process.env.UTILITY1_ADDRESS;
+const UTILITY2_ADDRESS = process.env.UTILITY2_ADDRESS;
 
-
-const UTILITY1_ADDRESS = "0x5ae55038733F4f5311a86D53aFd01c4f56Aa0c5E";
-
-const UTILITY2_ADDRESS = "0xFDD3Ed693f28Bf0Ae2b9f4c9e87bc05668362F21";
 const artifacts = {
   UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
   SwapRouter: require("@uniswap/v3-periphery/artifacts/contracts/interfaces/ISwapRouter.sol/ISwapRouter.json"),
@@ -48,7 +46,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   const tokenInContract = new Contract(tokenIn, artifacts.ERC20.abi, deployer);
 
   // balances of deployer and signer
-  await tokenInContract.connect(signer).transfer(deployer.address, amountIn);
+  // await tokenInContract.connect(deployer).transfer(signer.address, amountIn);
 
   console.log("bal of deployer", await tokenInContract.balanceOf(deployer.address));
   console.log("bal of signer", await tokenInContract.balanceOf(signer.address));
@@ -86,7 +84,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   console.log("Pool Liquidity:", ethers.utils.formatUnits(liquidity));
 
   const tokenBalance = await tokenInContract.balanceOf(deployer.address);
-  console.log("Token In Balance:", ethers.utils.formatUnits(tokenBalance, 18));
+  console.log("Balance of deployer :", ethers.utils.formatUnits(tokenBalance, 18));
 
 
 
@@ -172,7 +170,7 @@ async function swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn) {
   }
 }
 
-let poolAddress = "0xd2e5C0519dc65d2Ac917d0E860C4D75e33A3D940";
+let poolAddress = "0x0fD4f827234052108a9500bd8D037F9FBF991c53";
 let tokenIn = UTILITY1_ADDRESS;
 let tokenOut = UTILITY2_ADDRESS;
 let amountIn = ethers.utils.parseUnits("1", 18);
@@ -189,6 +187,6 @@ swapExactInputSingle(poolAddress, tokenIn, tokenOut, amountIn)
 
 
 /*
-  npx hardhat run --network sepolia Swap/swapUT.js
+npx hardhat run --network sepolia Swap/swapUT.js
     
 */

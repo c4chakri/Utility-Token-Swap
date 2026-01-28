@@ -147,10 +147,13 @@ async function main() {
     const provider = ethers.provider;
 
     // Approve tokens
-    await approveTokens(signer);
+    await approveTokens(owner);
+    // await approveTokens(signer);
 
-    
-  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", signer, provider);
+    // Add liquidity
+    await addLiquidity(UTILITY1_UTILITY2, UTILITY1_ADDRESS, UTILITY2_ADDRESS, "UTILITY1", "UTILITY2", owner, provider);
+
+//  await addLiquidity(UTILITY1_UTILITY2, UTILITY2_ADDRESS, UTILITY1_ADDRESS, "UTILITY1", "UTILITY2", signer, provider);
 }
 
 main()
@@ -161,6 +164,6 @@ main()
     });
 
 /*
-npx hardhat run --network localhost Utils/add.js
+npx hardhat run --network localhost AddLiquidity/add.js
 */
 

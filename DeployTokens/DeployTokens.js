@@ -10,12 +10,12 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC_URL);
 const wallet = new Wallet(PRIVATE_KEY);
-const signer = wallet.connect(provider);
+// const signer = wallet.connect(provider);
 
 async function main() {
-  // const [owner, signer2] = await ethers.getSigners();
-  const owner = signer;
-  const signer2 = "0x74372a43378D10885882f9C0fE8A7d146B4A021B"
+  const [owner, signer2] = await ethers.getSigners();
+  // const owner = signer;
+  // const signer2 = "0x74372a43378D10885882f9C0fE8A7d146B4A021B"
 
   const ut1Params = [
 
@@ -38,8 +38,8 @@ async function main() {
   Utility2 = await ethers.getContractFactory("Utility2");
   utility2 = await Utility2.deploy(...ut1Params);
 
-  await utility1.connect(owner).transferUnrestrictedTokens(signer2, ethers.utils.parseEther("100000"));
-  await utility2.connect(owner).transferUnrestrictedTokens(signer2, ethers.utils.parseEther("100000"));
+  await utility1.connect(owner).transferUnrestrictedTokens(owner.address, ethers.utils.parseEther("100000"));
+  await utility2.connect(owner).transferUnrestrictedTokens(owner.address, ethers.utils.parseEther("100000"));
 
   // record addresses
   let addresses = [
