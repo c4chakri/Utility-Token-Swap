@@ -1,322 +1,192 @@
-// // Import necessary libraries and components
-// import Web3Modal from "web3modal";
-// import { Contract, ethers } from "ethers";
-// import { Token } from "@uniswap/sdk-core";
-// import { Pool, Position, nearestUsableTick } from "@uniswap/v3-sdk";
-// require("dotenv").config();
+/*************************************
+ * UNISWAP V3 ADD LIQUIDITY – DEBUG SAFE
+ *************************************/
 
-// // Uniswap contract addresses
-// const positionManagerAddress = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
+const { ethers } = require("hardhat");
+const { Contract } = require("ethers");
+const { Pool, Position, nearestUsableTick } = require("@uniswap/v3-sdk");
+const { Token } = require("@uniswap/sdk-core");
+require("dotenv").config();
 
-// // Import necessary contract ABIs
-// const artifacts = {
-//   NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
-//   UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
-//   WETH9: require("../Context/WETH9.json"),
-//     ERC20: require("../artifacts/contracts/Tether.sol/Tether.json"),
-// };
-// // Function to fetch pool data
-// async function getPoolData(poolContract) {
-//   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
-//     poolContract.tickSpacing(),
-//     poolContract.fee(),
-//     poolContract.liquidity(),
-//     poolContract.slot0(),
-//   ]);
+/* ================= ENV ================= */
 
-//   return {
-//     tickSpacing: tickSpacing,
-//     fee: fee,
-//     liquidity: liquidity,
-//     sqrtPriceX96: slot0[0],
-//     tick: slot0[1],
-//   };
-// }
-// // Main function to add liquidity
-// export const addLiquidityExternal = async (
-//   tokenAddress1,
-//   tokenAddress2,
-//   poolAddress,
-//   poolFee,
-//   tokenAmount1,
-//   tokenAmount2
-// ) => {
-    
-//   // Connect to the user's wallet
-//   const web3modal = await new Web3Modal();
-//   const connection = await web3modal.connect();
-//   const provider = new ethers.providers.Web3Provider(connection);
-//   const signer = provider.getSigner();
-//   const accountAddress = await signer.getAddress();
+const POSITION_MANAGER = process.env.MOBIUS_POSITION_MANAGER_ADDRESS;
+const POOL_ADDRESS = process.env.MOBIUS_UTILITY1_UTILITY2;
 
-//     // Create contract instances for both tokens
-//   const token1Contract = new Contract(
-//     tokenAddress1,
-//     artifacts.ERC20.abi,
-//     provider
-//   );
-//   const token2Contract = new Contract(
-//     tokenAddress2,
-//     artifacts.ERC20.abi,
-//     provider
-//   );
+const TOKEN_A = process.env.MOBIUS_UTILITY1_ADDRESS;
+const TOKEN_B = process.env.MOBIUS_UTILITY2_ADDRESS;
 
-//     // Approve token spending for the position manager
-//   await token1Contract
-//     .connect(signer)
-//     .approve(
-//       positionManagerAddress,
-//       ethers.utils.parseEther(tokenAmount1.toString())
-//     );
+/* ================= ABIS ================= */
 
-//   await token2Contract
-//     .connect(signer)
-//     .approve(
-//       positionManagerAddress,
-//       ethers.utils.parseEther(tokenAmount2.toString())
-//     );
+const artifacts = {
+  Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
+  PositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
+  ERC20: require("../artifacts/contracts/UT1.sol/Utility1.json"),
+};
 
-//       // Create a contract instance for the pool
-//   const poolContract = new Contract(
-//     poolAddress,
-//     artifacts.UniswapV3Pool.abi,
-//     provider
-//   );
+/* ================= HELPERS ================= */
 
-//     // Get the current chain ID
-//   const { chainId } = await provider.getNetwork();
+async function approve(token, owner, amount) {
+  const tx = await token.connect(owner).approve(POSITION_MANAGER, amount);
+  await tx.wait();
+}
 
-//  // Fetch token details for both tokens
-//   //TOKEN1
-//   const token1Name = await token1Contract.name();
-//   const token1Symbol = await token1Contract.symbol();
-//   const token1Decimals = await token1Contract.decimals();
-//   const token1Address = await token1Contract.address;
+/* ================= MAIN LOGIC ================= */
 
-//   //TOKEN2
-//   const token2Name = await token2Contract.name();
-//   const token2Symbol = await token2Contract.symbol();
-//   const token2Decimals = await token2Contract.decimals();
-//   const token2Address = await token2Contract.address;
+async function addLiquidity() {
+  const [owner,signer] = await ethers.getSigners();
+  const provider = ethers.provider;
 
+  console.log("\n================ START =================");
+  console.log("LP Signer:", signer.address);
 
-// // Create Token instances for both tokens
-//   const TokenA = new Token(
-//     chainId,
-//     token1Address,
-//     token1Decimals,
-//     token1Name,
-//     token1Symbol
-//   );
-//   const TokenB = new Token(
-//     chainId,
-//     token2Address,
-//     token2Decimals,
-//     token2Name,
-//     token2Symbol
-//   );
+  /* ---------- Pool ---------- */
 
+  const pool = new Contract(POOL_ADDRESS, artifacts.Pool.abi, provider);
 
-//   // Fetch pool data
-//   const poolData = await getPoolData(poolContract);
-//   console.log(poolData);
+  const [poolToken0, poolToken1, fee, liquidity, slot0, tickSpacing] =
+    await Promise.all([
+      pool.token0(),
+      pool.token1(),
+      pool.fee(),
+      pool.liquidity(),
+      pool.slot0(),
+      pool.tickSpacing(),
+    ]);
 
-//     // Create a Pool instance
-//   const pool = new Pool(
-//     TokenA,
-//     TokenB,
-//     poolData.fee,
-//     poolData.sqrtPriceX96.toString(),
-//     poolData.liquidity.toString(),
-//     poolData.tick
-//   );
+  console.log("\n=== POOL STATE ===");
+  console.log("token0:", poolToken0);
+  console.log("token1:", poolToken1);
+  console.log("sqrtPriceX96:", slot0.sqrtPriceX96.toString());
+  console.log("tick:", slot0.tick.toString());
 
-//     // Create a Position instance
-//   const position = new Position({
-//     pool: pool,
-//     liquidity: ethers.utils.parseUnits("1", 18),
-//     tickLower:
-//       nearestUsableTick(poolData.tick, poolData.tickSpacing) -
-//       poolData.tickSpacing * 2,
-//     tickUpper:
-//       nearestUsableTick(poolData.tick, poolData.tickSpacing) +
-//       poolData.tickSpacing * 2,
-//   });
+  if (slot0.sqrtPriceX96.eq(0)) {
+    throw new Error("❌ Pool not initialized");
+  }
 
-//   console.log(position);
-//   const { amount0: amount0Desired, amount1: amount1Desired } =
-//     position.mintAmounts;
+  /* ---------- Tokens ---------- */
 
-// // Prepare parameters for adding liquidity
-//   const params = {
-//     token0: tokenAddress1,
-//     token1: tokenAddress2,
-//     fee: poolData.fee,
-//     tickLower:
-//       nearestUsableTick(poolData.tick, poolData.tickSpacing) -
-//       poolData.tickSpacing * 2,
-//     tickUpper:
-//       nearestUsableTick(poolData.tick, poolData.tickSpacing) +
-//       poolData.tickSpacing * 2,
-//     amount0Desired: amount0Desired.toString(),
-//     amount1Desired: amount1Desired.toString(),
-//     amount0Min: 0,
-//     amount1Min: 0,
-//     recipient: accountAddress,
-//     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
-//   };
-
-//     // Create a contract instance for the NonfungiblePositionManager
-//   const nonfungiblePositionManager = new Contract(
-//     positionManagerAddress,
-//     artifacts.NonfungiblePositionManager.abi,
-//     provider
-//   );
-
-//     // Add liquidity by minting a new position
-//   const tx = await nonfungiblePositionManager.connect(signer).mint(params, {
-//     gasLimit: "1000000",
-//   });
-//   const receipt = await tx.wait();
-//   return receipt;
-// };
+  const erc20_0 = new Contract(poolToken0, artifacts.ERC20.abi, provider);
+  const erc20_1 = new Contract(poolToken1, artifacts.ERC20.abi, provider);
 
 
 
-/*************************************UPDATED LIQUIDITY SCRIPT*************************************/
+  const [dec0, dec1, bal0, bal1] = await Promise.all([
+    erc20_0.decimals(),
+    erc20_1.decimals(),
+    erc20_0.balanceOf(signer.address),
+    erc20_1.balanceOf(signer.address),
+  ]);
 
+  console.log("\n=== TOKEN STATE ===");
+  console.log("Decimals token0:", dec0);
+  console.log("Decimals token1:", dec1);
+  console.log("Balance token0:", bal0.toString());
+  console.log("Balance token1:", bal1.toString());
 
+  if (bal0.eq(0) || bal1.eq(0)) {
+    throw new Error("❌ Signer has zero token balance");
+  }
 
+  /* ---------- Approvals ---------- */
 
-// const { ethers } = require("hardhat");
-// const { Contract } = require("ethers");
-// const { Pool, Position, nearestUsableTick } = require("@uniswap/v3-sdk");
-// const { Token } = require("@uniswap/sdk-core");
-// const JSBI = require("jsbi");
+  console.log("\n=== APPROVALS ===");
+  await approve(erc20_0, signer, ethers.constants.MaxUint256);
+  await approve(erc20_1, signer, ethers.constants.MaxUint256);
 
-// require("dotenv").config();
+  const [allow0, allow1] = await Promise.all([
+    erc20_0.allowance(signer.address, POSITION_MANAGER),
+    erc20_1.allowance(signer.address, POSITION_MANAGER),
+  ]);
 
-// const positionManagerAddress = process.env.NEXT_PUBLIC_POSITION_MANAGER_ADDRESS;
-// const USDT_USDC_500 = process.env.NEXT_PUBLIC_USDT_USDC;
+  console.log("Allowance token0:", allow0.toString());
+  console.log("Allowance token1:", allow1.toString());
 
-// // Token addresses
-// const TETHER_ADDRESS = process.env.NEXT_PUBLIC_TETHER_ADDRESS;
-// // pool address 
+  /* ---------- SDK Tokens ---------- */
 
-// const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-// const WRAPPED_BITCOIN_ADDRESS = process.env.NEXT_PUBLIC_WRAPPED_BITCOIN_ADDRESS;
+  const token0 = new Token(31337, poolToken0, dec0);
+  const token1 = new Token(31337, poolToken1, dec1);
 
-// // Import necessary contract ABIs
-// const artifacts = {
-//   NonfungiblePositionManager: require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"),
-//   UniswapV3Pool: require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"),
-//   WETH9: require("../Context/WETH9.json"),
-//   Usdt: require("../artifacts/contracts/Tether.sol/Tether.json"),
-//   Usdc: require("../artifacts/contracts/Usdcoin.sol/UsdCoin.json"),
-// };
+  const sdkPool = new Pool(
+    token0,
+    token1,
+    fee,
+    slot0.sqrtPriceX96.toString(),
+    liquidity.toString(),
+    slot0.tick
+  );
 
-// // Fetch pool data
-// async function getPoolData(poolContract) {
-//   const [tickSpacing, fee, liquidity, slot0] = await Promise.all([
-//     poolContract.tickSpacing(),
-//     poolContract.fee(),
-//     poolContract.liquidity(),
-//     poolContract.slot0(),
-//   ]);
+  /* ---------- Ticks ---------- */
 
-//   return {
-//     tickSpacing,
-//     fee,
-//     liquidity,
-//     sqrtPriceX96: slot0.sqrtPriceX96,
-//     tick: slot0.tick,
-//   };
-// }
+  const tickLower =
+    nearestUsableTick(slot0.tick, tickSpacing) - tickSpacing * 2;
+  const tickUpper =
+    nearestUsableTick(slot0.tick, tickSpacing) + tickSpacing * 2;
 
-// // Main function to add liquidity
-// async function main() {
-//   const [owner, signer2] = await ethers.getSigners();
-//   const provider = ethers.provider;
+  console.log("\n=== TICKS ===");
+  console.log("tickLower:", tickLower);
+  console.log("tickUpper:", tickUpper);
 
-//   const usdtContract = new Contract(TETHER_ADDRESS, artifacts.Usdt.abi, provider);
-//   const usdcContract = new Contract(USDC_ADDRESS, artifacts.Usdc.abi, provider);
-//   const wrappedBitcoinContract = new Contract(WRAPPED_BITCOIN_ADDRESS, artifacts.WETH9.abi, provider);
+  /* ---------- Position ---------- */
 
-//   await usdtContract.connect(signer2).approve(
-//     positionManagerAddress,
-//     ethers.utils.parseUnits("1000", 18)
-//   );
-//   await usdcContract.connect(signer2).approve(
-//     positionManagerAddress,
-//     ethers.utils.parseUnits("1000", 18)
-//   );
+  const position = Position.fromAmounts({
+    pool: sdkPool,
+    tickLower,
+    tickUpper,
+    amount0: ethers.utils.parseUnits("10", dec0).toString(),
+    amount1: ethers.utils.parseUnits("10", dec1).toString(),
+    useFullPrecision: true,
+  });
 
+  const { amount0, amount1 } = position.mintAmounts;
 
-//   const usdtToken = new Token(31337, TETHER_ADDRESS, 18, "USDT", "Tether");
-//   const usdcToken = new Token(31337, USDC_ADDRESS, 18, "USDC", "USD Coin");
+  console.log("\n=== MINT AMOUNTS ===");
+  console.log("amount0:", amount0.toString());
+  console.log("amount1:", amount1.toString());
 
-//   const poolContract = new Contract(USDT_USDC_500, artifacts.UniswapV3Pool.abi, provider);
-//   const poolData = await getPoolData(poolContract);
+  /* ---------- Mint ---------- */
 
-//   const pool = new Pool(
-//     usdtToken,
-//     usdcToken,
-//     poolData.fee,
-//     poolData.sqrtPriceX96,
-//     poolData.liquidity,
-//     poolData.tick
-//   );
+  const manager = new Contract(
+    POSITION_MANAGER,
+    artifacts.PositionManager.abi,
+    signer
+  );
 
-//   const tickLower = nearestUsableTick(poolData.tick, poolData.tickSpacing) - poolData.tickSpacing * 2;
-//   const tickUpper = nearestUsableTick(poolData.tick, poolData.tickSpacing) + poolData.tickSpacing * 2;
+  const params = {
+    token0: poolToken0,
+    token1: poolToken1,
+    fee,
+    tickLower,
+    tickUpper,
+    amount0Desired: amount0.toString(),
+    amount1Desired: amount1.toString(),
+    amount0Min: 0,
+    amount1Min: 0,
+    recipient: signer.address,
+    deadline: Math.floor(Date.now() / 1000) + 600,
+  };
 
-//   const position = new Position({
-//     pool,
-//     liquidity: JSBI.BigInt(ethers.utils.parseUnits("2", 18).toString()),
-//     tickLower,
-//     tickUpper,
-//   });
+  console.log("\n=== MINTING POSITION ===");
 
-//   const { amount0: amount0Desired, amount1: amount1Desired } = position.mintAmounts;
+  const tx = await manager.mint(params, { gasLimit: 3_000_000 });
+  const receipt = await tx.wait();
 
-//   const params = {
-//     token0: TETHER_ADDRESS,
-//     token1: USDC_ADDRESS,
-//     fee: poolData.fee,
-//     tickLower,
-//     tickUpper,
-//     amount0Desired: JSBI.toNumber(amount0Desired),
-//     amount1Desired: JSBI.toNumber(amount1Desired),
-//     amount0Min: 0,
-//     amount1Min: 0,
-//     recipient: signer2.address,
-//     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
-//   };
+  console.log("✅ Liquidity added");
+  console.log("Tx:", receipt.transactionHash);
+}
 
-//   const nonfungiblePositionManager = new Contract(
-//     positionManagerAddress,
-//     artifacts.NonfungiblePositionManager.abi,
-//     signer2
-//   );
+/* ================= RUN ================= */
 
-//   const tx = await nonfungiblePositionManager.mint(params, { gasLimit: 1000000 });
+addLiquidity()
+  .then(() => {
+    console.log("\n================ DONE =================");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("\n❌ FAILED:", err.message);
+    process.exit(1);
+  });
 
-//   const receipt = await tx.wait();
-//   console.log("Liquidity added amount:  ", amount0Desired, amount1Desired);
-
-// }
-
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });
-
-//   /**
-//    npx hardhat run --network localhost Utils/addLiquidity.js
-//    */
-
- 
-
-
+  /*
+  npx hardhat run --network localhost Utils/addLiquidity.js 
+  */

@@ -5,23 +5,6 @@ const { promisify } = require("util");
 async function main() {
   const [owner, signer2] = await ethers.getSigners();
 
-//   Tether = await ethers.getContractFactory("Tether");
-//   tether = await Tether.deploy();
-
-//   Usdc = await ethers.getContractFactory("UsdCoin");
-//   usdc = await Usdc.deploy();
-
-//   WrappedBitcoin = await ethers.getContractFactory("WrappedBitcoin");
-//   wrappedBitcoin = await WrappedBitcoin.deploy();
-
-
-//   SchoolOfLaw = await ethers.getContractFactory("SchoolOfLaw");
-//   schoolOfLaw = await SchoolOfLaw.deploy();
-
-
-//   SchoolOfScience = await ethers.getContractFactory("SchoolOfScience");
-//   schoolOfScience = await SchoolOfScience.deploy();
-
   const ut1Params = [
 
     ethers.utils.parseEther("1000000000000000000000000000000"),
@@ -37,11 +20,15 @@ async function main() {
 
   ]
 
-  Utility1 = await ethers.getContractFactory("Utility1");
-  utility1 = await Utility1.deploy(...ut1Params);
+  console.log("Owner address:", owner.address);
+  console.log("Signer2 address:", signer2.address);
+  
 
-  Utility2 = await ethers.getContractFactory("Utility2");
-  utility2 = await Utility2.deploy(...ut1Params);
+//   Utility1 = await ethers.getContractFactory("Utility1");
+//   utility1 = await Utility1.deploy(...ut1Params);
+
+//   Utility2 = await ethers.getContractFactory("Utility2");
+//   utility2 = await Utility2.deploy(...ut1Params);
 
   // minting to sender
 //   await tether.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
@@ -51,7 +38,7 @@ async function main() {
 //   await schoolOfScience.connect(owner).mint(signer2.address, ethers.utils.parseEther("100000"));
 
   await utility1.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
-  await utility2.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
+//   await utility2.connect(owner).transferUnrestrictedTokens(signer2.address, ethers.utils.parseEther("100000"));
 
   // utility1 balance of signer2
 //   ut1Signer2Balance = await (utility1.balanceOf(signer2.address));
@@ -71,8 +58,8 @@ async function main() {
     // `MOBIUS_WRAPPED_BITCOIN_ADDRESS=${wrappedBitcoin.address}`,
     // `MOBIUS_SCHOOL_OF_LAW_ADDRESS=${schoolOfLaw.address}`,
     // `MOBIUS_SCHOOL_OF_SCIENCE_ADDRESS=${schoolOfScience.address}`,
-    `MOBIUS_UTILITY1_ADDRESS=${utility1.address}`,
-    `MOBIUS_UTILITY2_ADDRESS=${utility2.address}`,
+    `MOBIUS_TEST_SEPOLIA_UTILITY1_ADDRESS=${utility1.address}`,
+    // `MOBIUS_UTILITY2_ADDRESS=${utility2.address}`,
   ];
   const data = "\n" + addresses.join("\n");
 
@@ -84,7 +71,7 @@ async function main() {
       console.table({
        
         Utility1: utility1.address,
-        Utility2: utility2.address
+        // Utility2: utility2.address
       })
     })
     .catch((error) => {
@@ -94,7 +81,7 @@ async function main() {
 }
 
 /*
-  npx hardhat run --network localhost Utils/02_deployTokens.js
+npx hardhat run --network localhost Utils/testDeployTokens.js
 */
 
 main()
